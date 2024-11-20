@@ -49,7 +49,7 @@ result_log = log(x)  # ln(1) + (1 / 1)ε
 print(y)           # Output: 1 + 5ε
 print(result_sin)  # Output: sin(1) + cos(1)ε
 print(result_log)  # Output: ln(1) + 1ε
-
+```
 
 ---
 
