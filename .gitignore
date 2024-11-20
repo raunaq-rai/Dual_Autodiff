@@ -1,5 +1,14 @@
+# Bytecode and caches
 __pycache__/
 *.pyc
+
+# Distribution files
 dist/
 *.egg-info/
+
+# OS files
+.DS_Store
+
+# Docs build
+docs/_build/
 
