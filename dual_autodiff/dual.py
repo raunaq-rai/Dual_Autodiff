@@ -101,16 +101,3 @@ class Dual:
         return Dual(np.arctan(self.real), self.dual / (1 + self.real ** 2))
 
 
-# Global function aliases for easier calling
-sin = Dual.sin
-cos = Dual.cos
-tan = Dual.tan
-log = Dual.log
-exp = Dual.exp
-sqrt = Dual.sqrt
-sinh = Dual.sinh
-cosh = Dual.cosh
-tanh = Dual.tanh
-asin = Dual.asin
-acos = Dual.acos
-atan = Dual.atan
