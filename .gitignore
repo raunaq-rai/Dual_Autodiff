@@ -1,14 +1,49 @@
-# Bytecode and caches
-__pycache__/
+# Byte-compiled / optimized / compiled files
 *.pyc
+*.pyo
+*.pyd
+__pycache__/
 
-# Distribution files
-dist/
-*.egg-info/
+# Virtual environment
+venv/
+env/
 
-# OS files
-.DS_Store
-
-# Docs build
+# Sphinx build files
 docs/_build/
+docs/*.log
+
+# Egg info and build artifacts
+*.egg-info/
+build/
+dist/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# System files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# Test results
+tests/__pycache__/
+tests/*.pyc
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+
+# Mac-specific files
+.AppleDouble
+.LSOverride
+
+# Miscellaneous
+*.bak
+*.old
 
