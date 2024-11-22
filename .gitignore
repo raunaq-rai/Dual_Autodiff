@@ -46,4 +46,8 @@ tests/*.pyc
 # Miscellaneous
 *.bak
 *.old
+*.o
+*.so
+*.c
+*.h
 
