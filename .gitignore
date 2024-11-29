@@ -14,6 +14,7 @@ docs/*.log
 
 # Egg info and build artifacts (but not dist)
 *.egg-info/
+.eggs
 build
 
 # Jupyter Notebook checkpoints
