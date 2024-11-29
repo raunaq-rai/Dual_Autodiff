@@ -1,25 +1,22 @@
-from setuptools import setup, Extension, find_packages
+from setuptools import setup, Extension
 from Cython.Build import cythonize
 
-# Define Cython extensions, linking to the C source files
+# Define the extensions (Cython modules)
 extensions = [
-    Extension("dual_autodiff.dual", ["dual_autodiff/dual.c"]),
-    Extension("dual_autodiff.functions", ["dual_autodiff/functions.c"]),
-    Extension("dual_autodiff.version", ["dual_autodiff/version.c"]),
+    Extension("dual_autodiff.base", ["dual_autodiff/base.pyx"]),
+    Extension("dual_autodiff.dual", ["dual_autodiff/dual.pyx"]),
+    Extension("dual_autodiff.functions", ["dual_autodiff/functions.pyx"]),
 ]
 
-# Setup configuration
+# Call setup with cythonized extensions
 setup(
     name="dual_autodiff_x",
-    version="0.1.0",
-    author="Raunaq Rai",
-    description="A package for automatic differentiation using dual numbers.",
-    packages=find_packages(exclude=["tests*", "docs*", "*.pyx"]),  # Exclude `.pyx` files
-    ext_modules=cythonize(
-        extensions,
-        compiler_directives={"language_level": "3"},  # Python 3 language level
-    ),
-    zip_safe=False,  # Required for extensions
-    include_package_data=True,  # Include additional non-Python files
+    version="0.0.1b2",
+    description="A package for dual number-based automatic differentiation",
+    ext_modules=cythonize(extensions, compiler_directives={"language_level": "3"}),
+    packages=["dual_autodiff"],
+    package_data={"dual_autodiff": ["*.so"]},
+    exclude_package_data={"dual_autodiff": ["*.pyx", "*.py"]},
+    zip_safe=False,
 )
 
