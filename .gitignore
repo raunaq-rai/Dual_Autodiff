@@ -12,10 +12,9 @@ env/
 docs/_build/
 docs/*.log
 
-# Egg info and build artifacts
+# Egg info and build artifacts (but not dist)
 *.egg-info/
-build/
-dist/
+build
 
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
