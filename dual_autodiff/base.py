@@ -1,7 +1,6 @@
 # base.py
 """
 Base functionality for the dual_autodiff package.
-Contains utilities or helper functions that may be shared across modules.
 """
 
 def is_dual_instance(value):

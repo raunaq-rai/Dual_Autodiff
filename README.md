@@ -1,70 +1,151 @@
 # dual_autodiff
 
-The `dual_autodiff` package is a Python library designed for forward-mode automatic differentiation using dual numbers!
+`dual_autodiff` is a Python package that provides automatic differentiation using dual numbers. It is designed to handle derivatives and mathematical operations efficiently. The package also includes `dual_autodiff_x`, a Cython-optimized version for enhanced performance.
 
 ---
 
 ## Features
 
-- **Core Dual Class**:
-  - Represents dual numbers with real and dual parts.
-  - Supports basic arithmetic operations (addition, subtraction, multiplication, division).
-- **Advanced Functions**:
-  - Trigonometric functions: `sin`, `cos`, `tan`.
-  - Exponential and logarithmic functions: `exp`, `log`, `sqrt`.
-  - Hyperbolic and inverse trigonometric functions: `sinh`, `asin`, etc.
-- **Easy-to-Use API**:
-  - Simple function calls for differentiation tasks.
+- Automatic differentiation using dual numbers.
+- Support for a wide range of mathematical funtions:
+- Cython-optimized version (`dual_autodiff_x`) for improved speed.
 
 ---
 
 ## Installation
 
-Ensure you have Python 3.9 or higher. You can install the package using `pip install -e .` from the project folder:
+### Prerequisites
+- Python 3.9 or higher.
+- `pip` for package installation.
+- `conda` (optional) for managing virtual environments.
+
+### Installing `dual_autodiff`
+#### Using pip
+Clone the repository and install the package:
 
 ```bash
-cd /path/to/dual_autodiff
+git clone <repository_url>
+cd dual_autodiff
+pip install e .
+```
+
+#### Using conda
+1. Create a virtual environment using the provided `environment.yaml` file:
+```bash
+conda env create -n dual_env -f environment.yaml
+```
+2. Activate the environment:
+```bash
+conda activate dual_env
+```
+3. Install the package:
+```bash
 pip install -e .
 ```
 
-## Usage
 
-Here’s a quick example of how to use the package:
+## Usage
+### Using `dual_autodiff`
 
 ```python
-from dual_autodiff.dual import Dual
-from dual_autodiff.functions import sin, log
+from dual_autodiff import Dual, sin, cos
 
-# Define a dual number
-x = Dual(1, 1)  # Dual number: 1 + 1ε
+# Create a Dual object
+x = Dual(1.0, 1.0)  
 
-# Perform arithmetic operations
-y = x ** 2 + 3 * x - 5
-
-# Compute derivatives using built-in functions
-result_sin = sin(x)  # sin(1) + cos(1)ε
-result_log = log(x)  # ln(1) + (1 / 1)ε
-
-# Display the results
-print(y)           # Output: 1 + 5ε
-print(result_sin)  # Output: sin(1) + cos(1)ε
-print(result_log)  # Output: ln(1) + 1ε
+# Perform operations
+y = sin(x)
+print(f"Value: {y.real}, Derivative: {y.dual}")
 ```
+
+## Available Functions
+
+### **Dual Class Methods**
+The following methods are available in the `Dual` class:
+
+#### **Arithmetic Operations**
+- `__add__`, `__radd__` - Addition
+- `__sub__`, `__rsub__` - Subtraction
+- `__mul__`, `__rmul__` - Multiplication
+- `__truediv__`, `__rtruediv__` - Division
+- `__pow__` - Power
+
+#### **Trigonometric Functions**
+- `sin()` - Sine
+- `cos()` - Cosine
+- `tan()` - Tangent
+- `asin()` - Arcsine
+- `acos()` - Arccosine
+- `atan()` - Arctangent
+
+#### **Exponential and Logarithmic Functions**
+- `exp()` - Exponential
+- `log()` - Natural Logarithm
+- `sqrt()` - Square Root
+
+#### **Hyperbolic Functions**
+- `sinh()` - Hyperbolic Sine
+- `cosh()` - Hyperbolic Cosine
+- `tanh()` - Hyperbolic Tangent
 
 ---
 
-## Testing
+### **Global Functions in `functions.py`**
+These functions are global aliases for the corresponding `Dual` class methods, allowing them to be called directly with either `float` or `Dual` inputs:
 
-Run the test suite using `pytest` to ensure everything is working correctly:
+#### **Trigonometric Functions**
+- `sin`
+- `cos`
+- `tan`
+- `asin`
+- `acos`
+- `atan`
+
+#### **Exponential and Logarithmic Functions**
+- `exp`
+- `log`
+- `sqrt`
+
+#### **Hyperbolic Functions**
+- `sinh`
+- `cosh`
+- `tanh`
+
+---
+
+## How It Works
+
+### Dual Numbers
+Dual numbers are numbers of the form:
+
+\[
+a + b $\epsilon$
+\]
+
+Where:
+- a is the **real part**, representing the function value.
+- b is the **dual part**, representing the derivative.
+- $\epsilon$^2 = 0\, making \(\epsilon\) infinitesimally small.
+
+This structure allows for efficient computation of derivatives during operations.
+
+---
+### Cython Optimization
+
+The `dual_autodiff_x` package uses Cython to compile critical operations into C, providing a significant speed boost for computationally intensive tasks.
+
+### Installing `dual_autodiff_x`
+For the Cython-optimized version:
 
 ```bash
-pytest tests/
+cd dual_autodiff_x
+pip install e .
 ```
 
-## License
 
-This project is licensed under the MIT License.  
 
-You are free to use, modify, and distribute this software under the terms of the MIT License.  
-See the `LICENCE` file for detailed information.
+See the README.md file in `dual_autodiff_x`.
+
+
+
 
