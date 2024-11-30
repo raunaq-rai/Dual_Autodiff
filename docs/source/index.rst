@@ -15,3 +15,6 @@ documentation for details.
    :maxdepth: 2
    :caption: Contents:
 
+   tutorial
+   dual_autodiff
+   apple_silicon_x86_setup

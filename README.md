@@ -1,6 +1,6 @@
 # dual_autodiff
 
-The `dual_autodiff` package is a Python library designed for forward-mode automatic differentiation using dual numbers.
+The `dual_autodiff` package is a Python library designed for forward-mode automatic differentiation using dual numbers!
 
 ---
 

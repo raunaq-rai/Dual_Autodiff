@@ -1,4 +1,4 @@
-from dual_autodiff.dual import Dual
+from .dual import Dual
 
 # Global function aliases for easier calling
 def sin(x):
