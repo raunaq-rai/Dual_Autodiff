@@ -10,7 +10,7 @@ extensions = [
 
 # Call setup with cythonized extensions
 setup(
-    name="dual_autodiff_x",
+    name="rsr45_dual_autodiff_x",
     version="0.0.1b2",
     description="A package for dual number-based automatic differentiation",
     ext_modules=cythonize(extensions, compiler_directives={"language_level": "3"}),

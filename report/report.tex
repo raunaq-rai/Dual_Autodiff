@@ -6,7 +6,8 @@
 \usepackage{amsmath}    % For math environments and symbols
 \usepackage{amssymb}    % For \mathbb and other math symbols
 \usepackage{amsfonts}   % Additional math fonts
-\usepackage[backend=biber,style=numeric]{biblatex}
+\usepackage[backend=biber,style=numeric,sorting=none]{biblatex}
+
 \addbibresource{references.bib} % Add references.bib with the appropriate entries
 
 % Title format
@@ -28,27 +29,42 @@
 \maketitle
 
 \section{Introduction}
-This report details the development and implementation of a package designed for automatic differentiation using dual numbers. The package, named \texttt{dual\_autodiff}, allows users to compute derivatives efficiently while also supporting various mathematical operations such as trigonometric, logarithmic, and exponential functions.
+This report details the development and implementation of a Python package, \texttt{dual\_autodiff}, designed for automatic differentiation using dual numbers. The package computes derivatives efficiently while supporting mathematical operations such as trigonometric, logarithmic, and exponential functions.
 
-The main feature of \texttt{dual\_autodiff} is its ability to leverage dual numbers for calculating derivatives in a computationally efficient and user-friendly manner. Additionally, a Cython-optimized version of the package, \texttt{dual\_autodiff\_x}, provides enhanced performance for intensive computations.
+The approach builds on the concept of forward-mode automatic differentiation, which is essential in fields like optimization, computational physics, and machine learning. This technique traces its roots to the foundational work by Wengert~\cite{wengert1964automatic}, who introduced a systematic way to compute derivatives using intermediate variables. More recently, Baydin et al.~\cite{baydin2018automatic} surveyed the use of automatic differentiation in machine learning, emphasizing its importance in training deep neural networks.
 
-This document covers the structure of the project, the implementation details, and the mathematical principles underpinning the use of dual numbers for differentiation.
+To enhance performance, a Cython-optimized version, \texttt{dual\_autodiff\_x}, was also developed. This document covers the structure of the project, the mathematical principles behind dual numbers, and the implementation details of the package.
 
-\section{Theory of Dual Numbers and Their Use in Automatic Differentiation}
+\section{Setting Up the Development Environment}
+
+Apple Silicon devices primarily use the ARM64 architecture, which can pose challenges when working with scientific computing tools built for x86\_64. To ensure compatibility with these tools, I configured the development environment to run in x86\_64 mode. This step was crucial for enabling seamless execution of packages and tools designed for x86\_64 systems.
+
+To achieve this:
+\begin{itemize}
+    \item \textbf{Rosetta Installation:} Rosetta, an emulation layer by Apple, was installed to facilitate running x86\_64 binaries on ARM-based devices. This was achieved using:
+    \begin{verbatim}
+    /usr/sbin/softwareupdate --install-rosetta
+    \end{verbatim}
+    \item \textbf{Configuring Terminal:} The Terminal application was set to run in Rosetta mode, ensuring compatibility with x86\_64 libraries and tools.
+    \item \textbf{Creating an x86\_64 Conda Environment:} A dedicated Conda environment was created with all required dependencies for developing and testing the package.
+\end{itemize}
+
+This setup allowed for consistent development and ensured the compatibility of tools and libraries required for this project.
+
+\section{Theoretical Background}
 
 \subsection{Dual Numbers}
-
 Dual numbers can be defined as truncated Taylor series of the form:
-
 \[
 x = v + \dot{v}\epsilon,
 \]
+where \(v, \dot{v} \in \mathbb{R}\), and \(\epsilon\) is a nilpotent number such that \(\epsilon^2 = 0\) and \(\epsilon \neq 0\). Here:
+\begin{itemize}
+    \item \(v\): Represents the \textit{primal value}.
+    \item \(\dot{v}\): Represents the \textit{derivative} or \textit{tangent value}.
+\end{itemize}
 
-where \(v, \dot{v} \in \mathbb{R}\), and \(\epsilon\) is a nilpotent number such that \(\epsilon^2 = 0\) and \(\epsilon \neq 0\). In this representation:
-- \(v\) is referred to as the \textit{primal value}.
-- \(\dot{v}\) represents the \textit{derivative} or \textit{tangent value}.
-
-As discussed by Baydin et al.~\cite{baydin2018automatic}, arithmetic operations with dual numbers are designed to mirror symbolic differentiation rules. For example:
+As explained by Baydin et al.~\cite{baydin2018automatic}, arithmetic operations with dual numbers align naturally with symbolic differentiation principles:
 \[
 (x_1 + \dot{x}_1\epsilon) + (x_2 + \dot{x}_2\epsilon) = (x_1 + x_2) + (\dot{x}_1 + \dot{x}_2)\epsilon,
 \]
@@ -56,71 +72,89 @@ As discussed by Baydin et al.~\cite{baydin2018automatic}, arithmetic operations 
 (x_1 + \dot{x}_1\epsilon)(x_2 + \dot{x}_2\epsilon) = x_1x_2 + (x_1\dot{x}_2 + \dot{x}_1x_2)\epsilon.
 \]
 
-These operations align naturally with differentiation principles, where the coefficients of \(\epsilon\) represent the derivatives of the associated functions.
-
-\section{Historical Context of Automatic Differentiation}
-
-The foundations of automatic differentiation (AD) were laid in 1964 when R.E. Wengert published his influential paper, \textit{A Simple Automatic Derivative Evaluation Program} \cite{wengert1964automatic}. Wengert's work introduced a systematic approach for computing derivatives of complex functions numerically, eliminating the need for labor-intensive manual derivations of analytical expressions.
-
-Wengert's method was motivated by the challenges engineers and scientists faced when working with intricate mathematical models. Analytical differentiation was often cumbersome, especially for large systems of equations. Numerical differentiation, though simpler, was prone to errors due to finite precision. Wengert addressed these issues by proposing a method that broke down complex functions into a series of simpler, intermediate steps.
-
-The key innovation in Wengert's method was the use of intermediate variables to represent elementary operations. By systematically tracking these variables and their contributions, Wengert demonstrated how derivatives could be computed as a natural by-product of evaluating the function itself. This approach provided a practical and efficient solution, making it easier to compute both total and partial derivatives for arbitrary algebraic functions.
-
-\subsection{Legacy and Impact}
-
-Wengert’s method marked the beginning of automatic differentiation as a distinct field. His approach simplified derivative computation, enabling engineers and researchers to handle complex systems with ease. Over time, these principles evolved into the modern AD tools used today, which play a crucial role in fields such as machine learning, optimization, and computational physics.
-
-
-\subsection{Automatic Differentiation with Dual Numbers}
-
-Automatic differentiation can be achieved by evaluating functions using dual numbers. For a function \(f(x)\), substituting \(x = v + \dot{v}\epsilon\) yields:
-
+\subsection{Automatic Differentiation}
+Automatic differentiation (AD) leverages dual numbers to compute derivatives efficiently. For a function \(f(x)\), substituting \(x = v + \dot{v}\epsilon\) yields:
 \[
-f(x) = f(v + \dot{v}\epsilon) = f(v) + f'(v)\dot{v}\epsilon,
+f(x) = f(v + \dot{v}\epsilon) = f(v) + f'(v)\dot{v}\epsilon.
 \]
+The derivative \(f'(v)\) is embedded in the coefficient of \(\epsilon\), enabling simultaneous evaluation of function values and derivatives.
 
-where:
-- \(f(v)\) is the function value.
-- \(f'(v)\dot{v}\) represents the derivative scaled by \(\dot{v}\).
-
-To compute the derivative of \(f\), the input \(x\) is represented as \(x = v + \epsilon\), where \(\dot{v} = 1\). This ensures that the derivative of \(f\) at \(v\) is embedded in the coefficient of \(\epsilon\) in the result.
-
-As Wengert’s early work~\cite{wengert1964automatic} and Baydin et al.~\cite{baydin2018automatic} explain, the chain rule naturally follows for compositions of functions:
-
+This principle extends to composite functions via the chain rule:
 \[
 f(g(v + \dot{v}\epsilon)) = f(g(v)) + f'(g(v))g'(v)\dot{v}\epsilon.
 \]
 
-This demonstrates that the derivative of the composition is embedded in the coefficient of \(\epsilon\).
+\section{Implementation of Dual Numbers and Operations}
 
-\subsection{Practical Implementation}
+\subsection{Overview of the \texttt{Dual} Class}
+The \texttt{dual.py} file implements the \texttt{Dual} class, the core of the \texttt{dual\_autodiff} package. This class defines dual numbers and supports operations such as addition, subtraction, multiplication, and division.
 
-In practice, dual numbers are used to evaluate functions, allowing simultaneous computation of function values and derivatives. A real number \(x\) is represented as a dual number \(x = v + \dot{v}\epsilon\), where:
+\subsubsection{Arithmetic Operations}
+The \texttt{Dual} class overrides arithmetic operators for seamless integration. For example:
+\begin{verbatim}
+x = Dual(2, 1)
+y = Dual(3, 2)
+print(x + y)  # Output: Dual(real=5, dual=3)
+\end{verbatim}
+
+\subsubsection{Mathematical Functions}
+The \texttt{Dual} class also implements key mathematical functions such as:
 \begin{itemize}
-    \item \(v\) is the value of the function input.
-    \item \(\dot{v}\) is initialized to \(1\) to compute the derivative with respect to \(x\).
+    \item Trigonometric functions (\texttt{sin}, \texttt{cos}, \texttt{tan}).
+    \item Exponential and logarithmic functions (\texttt{exp}, \texttt{log}).
+    \item Hyperbolic functions (\texttt{sinh}, \texttt{cosh}, \texttt{tanh}).
+    \item Square root (\texttt{sqrt}).
+\end{itemize}
+For example:
+\begin{verbatim}
+x = Dual(2, 1)
+result = x.sin()
+print(result)  # Output: Dual(real=0.9092..., dual=-0.4161...)
+\end{verbatim}
+
+\subsection{Utility Functions}
+To enhance usability:
+\begin{itemize}
+    \item \texttt{functions.py} provides aliases for mathematical functions.
+    \item \texttt{base.py} includes helper functions like:
+    \begin{itemize}
+        \item \texttt{is\_dual\_instance(value)}: Checks if a value is a \texttt{Dual} instance.
+        \item \texttt{ensure\_dual(value)}: Wraps non-\texttt{Dual} values into a \texttt{Dual} object.
+    \end{itemize}
 \end{itemize}
 
-For example, to compute the derivative of \(\sin(x)\) at \(x = 1\), substitute \(x = 1 + \epsilon\):
-\[
-\sin(1 + \epsilon) = \sin(1) + \cos(1)\epsilon.
-\]
-Here:
+\section{Project Structure and Packaging}
+
+\subsection{Repository Organization}
+The repository follows good practices for Python projects:
 \begin{itemize}
-    \item \(\sin(1)\) is the function value at \(x = 1\).
-    \item \(\cos(1)\), the coefficient of \(\epsilon\), represents the derivative of \(\sin(x)\) at \(x = 1\).
+    \item \texttt{dual\_autodiff/}: Core implementation.
+    \item \texttt{tests/}: Unit tests.
+    \item \texttt{docs/}: Documentation.
+    \item \texttt{pyproject.toml}: Modern project configuration file.
+    \item \texttt{requirements.txt}: Lists Python dependencies.
+    \item \texttt{environment.yaml}: Defines the Conda environment.
 \end{itemize}
 
-This process demonstrates how dual numbers encode both the function value and its derivative in a single representation, eliminating the need for separate derivative computations.
+\subsection{Building and Installing the Package}
+The \texttt{pyproject.toml} file specifies build metadata:
+\begin{itemize}
+    \item \texttt{[build-system]}: Declares build tools.
+    \item \texttt{[project]}: Contains metadata like name and dependencies.
+    \item \texttt{[tool.setuptools\_scm]}: Handles dynamic versioning.
+\end{itemize}
 
-\subsection{Applications in Programming}
+To install the package, the following commands were used:
+\begin{verbatim}
+pip install build
+python -m build
+pip install -e .
+\end{verbatim}
 
-Dual numbers enable seamless automatic differentiation through operator overloading. By augmenting basic arithmetic and mathematical operations to respect dual arithmetic rules, derivatives can be computed alongside function evaluations. This transparency allows:
-- Simultaneous computation of function values and derivatives.
-- Integration into arbitrary program constructs, as dual numbers can exist within any data structure.
-
-The \texttt{dual\_autodiff} package uses dual numbers to implement forward-mode AD, enabling efficient computation of derivatives for scientific and numerical tasks. Through operator overloading, users can compute derivatives by writing functions in a natural, mathematical syntax.
+\section{Conclusion}
+By combining the theoretical principles of dual numbers with practical implementation strategies, the \texttt{dual\_autodiff} package provides an efficient solution for automatic differentiation. The structured approach to repository organization and environment setup ensures robustness and compatibility across platforms.
 
 \printbibliography
+
 
 \end{document}
