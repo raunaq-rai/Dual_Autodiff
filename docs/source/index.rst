@@ -17,4 +17,5 @@ documentation for details.
 
    tutorial
    dual_autodiff
+   modules
    apple_silicon_x86_setup
