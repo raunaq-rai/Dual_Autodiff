@@ -3,7 +3,7 @@ channels:
   - defaults
   - conda-forge
 dependencies:
-  - python=3.10  # Specify Python version
+  - python=3.11  # Specify Python version
   - pip
   - numpy        # For numerical operations
   - pytest       # For testing
