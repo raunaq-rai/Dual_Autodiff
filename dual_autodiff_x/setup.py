@@ -10,13 +10,13 @@ extensions = [
 
 # Call setup with cythonized extensions
 setup(
-    name="rsr45_dual_autodiff_x",
-    version="0.0.1b2",
+    name="rsr45-dual-autodiff-x",
+    version="0.0.1b3",  # Increment version for new build
     description="A package for dual number-based automatic differentiation",
     ext_modules=cythonize(extensions, compiler_directives={"language_level": "3"}),
     packages=["dual_autodiff"],
-    package_data={"dual_autodiff": ["*.so"]},
-    exclude_package_data={"dual_autodiff": ["*.pyx", "*.py"]},
+    package_data={"dual_autodiff": ["*.so"]},  # Include only shared object files
+    exclude_package_data={"dual_autodiff": ["*.pyx", "*.py"]},  # Exclude Python and Cython source
     zip_safe=False,
 )
 
