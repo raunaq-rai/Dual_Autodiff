@@ -24,7 +24,7 @@
 Clone the repository and install the package:
 
 ```bash
-git clone <repository_url>
+git clone 'https://gitlab.developers.cam.ac.uk/phy/data-intensive-science-mphil/assessments/c1_coursework1/rsr45.git'
 cd dual_autodiff
 pip install e .
 ```
@@ -38,7 +38,7 @@ conda env create -n dual_env -f environment.yaml
 ```bash
 conda activate dual_env
 ```
-3. Install the package:
+3. Install the package within this environment:
 ```bash
 pip install -e .
 ```
