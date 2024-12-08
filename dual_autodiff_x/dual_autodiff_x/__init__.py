@@ -1,11 +1,11 @@
-kfrom .dual import Dual
+from .dual import Dual
 from .functions import (
     sin, cos, tan, log, exp, sqrt,
     sinh, cosh, tanh, asin, acos, atan
 )
 
 # Define the version directly here
-__version__ = "0.1.7"
+__version__ = "0.1.13"
 
 # Define the public API
 __all__ = [

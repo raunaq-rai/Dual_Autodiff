@@ -1,6 +1,6 @@
 [project]
 name = "rsr45-dual-autodiff-x"
-version = "0.1.7"
+version = "0.1.13"
 description = "A package for dual number-based automatic differentiation"
 readme = "README.md"
 requires-python = ">=3.6"
