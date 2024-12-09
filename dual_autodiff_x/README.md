@@ -23,6 +23,22 @@ Install the package directly from PyPI:
 pip install rsr45-dual-autodiff-x
 ```
 
+### Using github
+ 1. Clone the repository
+ ```bash
+ git clone https://gitlab.developers.cam.ac.uk/phy/data-intensive-science-mphil/assessments/c1_coursework1/rsr45.git
+ ```
+
+ 2. Navigate to dual_autodiff_x
+ ```bash
+ cd dual_autodiff_x
+ ```
+
+ 3. Install the package
+ ```bash
+ pip install e .
+ ```
+
 ## Usage
 
 ### Importing the Package
