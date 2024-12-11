@@ -5,7 +5,7 @@ from .functions import (
 )
 
 # Define the version directly here
-__version__ = "0.1.15"
+__version__ = "0.1.16"
 
 # Define the public API
 __all__ = [

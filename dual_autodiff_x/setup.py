@@ -10,12 +10,13 @@ extensions = [
     Extension("dual_autodiff_x.base", ["dual_autodiff_x/base.pyx"]),
     Extension("dual_autodiff_x.dual", ["dual_autodiff_x/dual.pyx"]),
     Extension("dual_autodiff_x.functions", ["dual_autodiff_x/functions.pyx"]),
+    Extension("dual_autodiff_x.version", ["dual_autodiff_x/version.pyx"]),
 ]
 
 # Call setup with cythonized extensions
 setup(
     name="rsr45-dual-autodiff-x",
-    version="0.1.15",  # Updated version
+    version="0.1.16",  # Updated version
     description="A package for dual number-based automatic differentiation (optimized version)",
     long_description=long_description,
     long_description_content_type="text/markdown",  # Specify Markdown format
