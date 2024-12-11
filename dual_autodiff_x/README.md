@@ -10,7 +10,6 @@
 - **Mathematical Functions**: Includes trigonometric, exponential, logarithmic, and other common mathematical functions.
 - **Automatic Differentiation**: Computes derivatives automatically as a natural part of the computation.
 - **Cython Optimization**: Improved performance for computationally intensive tasks.
-- **Cross-Version Support**: Compatible with Python 3.10 and 3.11.
 
 ---
 
