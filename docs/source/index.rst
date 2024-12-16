@@ -14,7 +14,8 @@ documentation for details.
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
+   
+   implementation
    tutorial
    dual_autodiff
    modules

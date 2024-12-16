@@ -11,6 +11,7 @@ dual\_autodiff.base module
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 
 dual\_autodiff.dual module
 --------------------------
@@ -19,6 +20,7 @@ dual\_autodiff.dual module
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 
 dual\_autodiff.functions module
 -------------------------------
@@ -27,6 +29,7 @@ dual\_autodiff.functions module
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 
 dual\_autodiff.version module
 -----------------------------
@@ -35,6 +38,7 @@ dual\_autodiff.version module
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 
 Module contents
 ---------------
@@ -43,3 +47,4 @@ Module contents
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
