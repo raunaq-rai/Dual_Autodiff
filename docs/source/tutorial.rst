@@ -4,5 +4,4 @@ Tutorial
 .. toctree::
    :maxdepth: 1
 
-   dual_autodiff
-
+   dual_autodiff.ipynb
