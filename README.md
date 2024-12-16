@@ -13,6 +13,49 @@
 
 ---
 
+## Installation
+
+### Prerequisites
+- Python 3.9 or higher.
+- `pip` for package installation.
+- `conda` (optional) for managing virtual environments.
+
+### Installing `dual_autodiff`
+
+#### Using `pip`
+Install the package directly from PyPI:
+```bash
+pip install rsr45-dual-autodiff
+pip install numpy
+pip install pytest
+```
+
+Or Clone the repository and install the package:
+
+```bash
+git clone 'https://gitlab.developers.cam.ac.uk/phy/data-intensive-science-mphil/assessments/c1_coursework1/rsr45.git'
+cd dual_autodiff
+pip install e .
+pip install -r requirements.txt
+```
+
+#### Using conda
+1. Create a virtual environment using the provided `environment.yaml` file:
+```bash
+conda env create -n dual_env -f environment.yaml
+```
+2. Activate the environment:
+```bash
+conda activate dual_env
+```
+3. Install the package within this environment:
+```bash
+pip install -e .
+pip install -r requirements.txt
+```
+
+---
+
 ## How It Works
 
 ### Dual Numbers and Automatic Differentiation
@@ -24,9 +67,9 @@ a + b $\epsilon$
 \]
 
 Where:
-- \(a\) is the **real part**, representing the value of the function.
-- \(b\) is the **dual part**, representing the derivative of the function.
-- \(\$\epsilon$) is an infinitesimal unit such that \($\epsilon$^2 = 0\), meaning any higher powers of \($\epsilon$) vanish.
+- a is the **real part**, representing the value of the function.
+- b is the **dual part**, representing the derivative of the function.
+- $\epsilon$ is an infinitesimal unit such that \($\epsilon$^2 = 0\), meaning any higher powers of \($\epsilon$) vanish.
 
 ### Application in Automatic Differentiation
 
@@ -46,46 +89,10 @@ This property eliminates the need for symbolic differentiation or numerical appr
 
 ---
 
-## Installation
-
-### Prerequisites
-- Python 3.9 or higher.
-- `pip` for package installation.
-- `conda` (optional) for managing virtual environments.
-
-### Installing `dual_autodiff`
-
-#### Using `pip`
-Install the package directly from PyPI:
-```bash
-pip install rsr45-dual-autodiff
-```
-
-Or Clone the repository and install the package:
-
-```bash
-git clone 'https://gitlab.developers.cam.ac.uk/phy/data-intensive-science-mphil/assessments/c1_coursework1/rsr45.git'
-cd dual_autodiff
-pip install e .
-```
-
-#### Using conda
-1. Create a virtual environment using the provided `environment.yaml` file:
-```bash
-conda env create -n dual_env -f environment.yaml
-```
-2. Activate the environment:
-```bash
-conda activate dual_env
-```
-3. Install the package within this environment:
-```bash
-pip install -e .
-```
-
-
 ## Usage
 ### Using `dual_autodiff`
+
+See `dual_autodiff.ipynb` within docs for examples
 
 ```python
 from dual_autodiff import Dual, sin, cos

@@ -1,6 +1,6 @@
 # rsr45-dual-autodiff-x
 
-`rsr45-dual-autodiff-x` is a Python package that provides an efficient and user-friendly implementation of dual numbers for automatic differentiation. This package is optimized using Cython for improved performance.
+`rsr45-dual-autodiff-x` is optimised using Cython for improved performance.
 
 ---
 
@@ -26,15 +26,9 @@ pip install rsr45-dual-autodiff-x
  1. Clone the repository
  ```bash
  git clone https://gitlab.developers.cam.ac.uk/phy/data-intensive-science-mphil/assessments/c1_coursework1/rsr45.git
- ```
-
- 2. Navigate to dual_autodiff_x
- ```bash
+ cd dual_autodiff
+ pip install -r requirements.txt
  cd dual_autodiff_x
- ```
-
- 3. Install the package
- ```bash
  pip install e .
  ```
 
@@ -44,25 +38,25 @@ pip install rsr45-dual-autodiff-x
 
 ```python
 import dual_autodiff_x as df_x
-from dual_autodiff_x.dual import Dual as DualOptimized
-from dual_autodiff_x.functions import sin as sin_optimized, cos as cos_optimized, log as log_optimized
+from dual_autodiff_x.dual import Dual as DualOptimised
+from dual_autodiff_x.functions import sin as sin_optimised, cos as cos_optimised, log as log_optimised
 ```
 
-### Using `dual_autodiff_x` (Optimized Version)
+### Using `dual_autodiff_x` (Optimised Version)
 ```python
-x_optimized = DualOptimized(2, 1)  # Represents the dual number 2 + 1ε
+x_optimised = DualOptimised(2, 1)  # Represents the dual number 2 + 1ε
 ```
 
 ---
 
 ## Performing Operations
 
-### Using dual_autodiff_x (Optimized Version)
+### Using dual_autodiff_x (Optimised Version)
 
 ```python
 # Example: f(x) = log(sin(x)) + x^2 * cos(x)
-f_x_optimized = log_optimized(sin_optimized(x_optimized)) + x_optimized**2 * cos_optimized(x_optimized)
-print(f_x_optimized)  # Output the result and its derivative
+f_x_optimised = log_optimised(sin_optimised(x_optimised)) + x_optimised**2 * cos_optimised(x_optimised)
+print(f_x_optimised)  # Output the result and its derivative
 ```
 
 ---

@@ -16,7 +16,7 @@ extensions = [
 # Call setup with cythonized extensions
 setup(
     name="rsr45-dual-autodiff-x",
-    version="0.1.16",  # Updated version
+    version="0.1.17",  # Updated version
     description="A package for dual number-based automatic differentiation (optimized version)",
     long_description=long_description,
     long_description_content_type="text/markdown",  # Specify Markdown format

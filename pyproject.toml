@@ -29,9 +29,7 @@ dependencies = [  # Lists dependencies required for the project
 ]
 
 [project.urls]
-"Documentation" = "https://your-readthedocs-url-here"
 "Source" = "https://gitlab.developers.cam.ac.uk/phy/data-intensive-science-mphil/assessments/c1_coursework1/rsr45.git"
-"Issues" = "https://github.com/yourusername/dual_autodiff/issues"
 
 [tool.setuptools_scm]
 version_scheme = "post-release"

@@ -31,17 +31,17 @@
 \section{Introduction}
 This report details the development and implementation of a Python package, \texttt{dual\_autodiff}, designed for automatic differentiation using dual numbers. The package computes derivatives efficiently while supporting mathematical operations such as trigonometric, logarithmic, and exponential functions.
 
-The approach builds on the concept of forward-mode automatic differentiation, which is essential in fields like optimization, computational physics, and machine learning. This technique traces its roots to the foundational work by Wengert~\cite{wengert1964automatic}, who introduced a systematic way to compute derivatives using intermediate variables. More recently, Baydin et al.~\cite{baydin2018automatic} surveyed the use of automatic differentiation in machine learning, emphasising its importance in training deep neural networks.
+The approach builds on the concept of forward-mode automatic differentiation, which is essential in fields like optimisation, computational physics, and machine learning. This technique traces its roots to the foundational work by Wengert~\cite{wengert1964automatic}, who introduced a systematic way to compute derivatives using intermediate variables. More recently, Baydin et al.~\cite{baydin2018automatic} surveyed the use of automatic differentiation in machine learning, emphasising its importance in training deep neural networks.
 
-To enhance performance, a Cython-optimized version, \texttt{dual\_autodiff\_x}, was also developed. This document covers the structure of the project, the mathematical principles behind dual numbers, and the implementation details of the package.
+To enhance performance, a Cython-optimised version, \texttt{dual\_autodiff\_x}, was also developed. This document covers the structure of the project, the mathematical principles behind dual numbers, and the implementation details of the package.
 
 \section{Setting Up the Development Environment}
 
-Apple Silicon devices primarily use the ARM64 architecture, which can pose challenges when working with scientific computing tools built for x86\_64. To ensure compatibility with these tools, I configured the development environment to run in x86\_64 mode. This step was crucial for enabling seamless execution of packages and tools designed for x86\_64 systems.
+Apple Silicon devices primarily use the ARM64 architecture, which can pose challenges when working with scientific computing tools built for x86\_64. To ensure compatibility with these tools, I configured the development environment to run in x86\_64 mode. This step was crucial for enabling the execution of packages and tools designed for x86\_64 systems.
 
 To achieve this:
 \begin{itemize}
-    \item \textbf{Rosetta Installation:} Rosetta, an emulation layer by Apple, was installed to facilitate running x86\_64 binaries on ARM-based devices. This was achieved using:
+    \item \textbf{Rosetta Installation:} Rosetta, an emulation layer, was installed to facilitate running x86\_64 binaries on ARM-based devices. This was achieved using:
     \begin{verbatim}
     /usr/sbin/softwareupdate --install-rosetta
     \end{verbatim}
@@ -55,9 +55,10 @@ This setup allowed for consistent development and ensured the compatibility of t
 
 \subsection{Dual Numbers}
 Dual numbers can be defined as truncated Taylor series of the form:
-\[
-x = v + \dot{v}\epsilon,
-\]
+\begin{equation}
+    x = v + \dot{v}\epsilon,
+    \label{eq:dual_number_form}
+    \end{equation}
 where \(v, \dot{v} \in \mathbb{R}\), and \(\epsilon\) is a nilpotent number such that \(\epsilon^2 = 0\) and \(\epsilon \neq 0\). Here:
 \begin{itemize}
     \item \(v\): Represents the \textit{primal value}.
@@ -65,75 +66,112 @@ where \(v, \dot{v} \in \mathbb{R}\), and \(\epsilon\) is a nilpotent number such
 \end{itemize}
 
 As explained by Baydin et al.~\cite{baydin2018automatic}, arithmetic operations with dual numbers align naturally with symbolic differentiation principles:
-\[
-(x_1 + \dot{x}_1\epsilon) + (x_2 + \dot{x}_2\epsilon) = (x_1 + x_2) + (\dot{x}_1 + \dot{x}_2)\epsilon,
-\]
-\[
-(x_1 + \dot{x}_1\epsilon)(x_2 + \dot{x}_2\epsilon) = x_1x_2 + (x_1\dot{x}_2 + \dot{x}_1x_2)\epsilon.
-\]
+\begin{equation}
+    (x_1 + \dot{x}_1\epsilon) + (x_2 + \dot{x}_2\epsilon) = (x_1 + x_2) + (\dot{x}_1 + \dot{x}_2)\epsilon,
+    \label{eq:dual_addition}
+    \end{equation}
+    
+    \begin{equation}
+    (x_1 + \dot{x}_1\epsilon)(x_2 + \dot{x}_2\epsilon) = x_1x_2 + (x_1\dot{x}_2 + \dot{x}_1x_2)\epsilon,
+    \label{eq:dual_multiplication}
+    \end{equation}
+    
 
 \subsection{Automatic Differentiation}
-Automatic differentiation (AD) leverages dual numbers to compute derivatives efficiently. For a function \(f(x)\), substituting \(x = v + \dot{v}\epsilon\) yields:
-\[
-f(x) = f(v + \dot{v}\epsilon) = f(v) + f'(v)\dot{v}\epsilon.
-\]
+Automatic differentiation leverages dual numbers to compute derivatives efficiently. For a function \(f(x)\), substituting \(x = v + \dot{v}\epsilon\) yields:
+\begin{equation}
+    f(x) = f(v + \dot{v}\epsilon) = f(v) + f'(v)\dot{v}\epsilon,
+    \label{eq:dual_function}
+    \end{equation}
+    
 The derivative \(f'(v)\) is embedded in the coefficient of \(\epsilon\), enabling simultaneous evaluation of function values and derivatives.
 
 This principle extends to composite functions via the chain rule:
-\[
-f(g(v + \dot{v}\epsilon)) = f(g(v)) + f'(g(v))g'(v)\dot{v}\epsilon.
-\]
+\begin{equation}
+    f(g(v + \dot{v}\epsilon)) = f(g(v)) + f'(g(v))g'(v)\dot{v}\epsilon,
+    \label{eq:composite_function}
+    \end{equation}
+    
 
-\section{Implementation of Dual Numbers and Operations}
+    \section{Implementation of Dual Numbers and Operations}
 
-\subsection{Overview of the \texttt{Dual} Class}
-The \texttt{dual.py} file implements the \texttt{Dual} class, the core of the \texttt{dual\_autodiff} package. This class defines dual numbers and supports operations such as addition, subtraction, multiplication, and division.
-
-\subsubsection{Arithmetic Operations}
-The \texttt{Dual} class overrides arithmetic operators for seamless integration. For example:
-\begin{verbatim}
-x = Dual(2, 1)
-y = Dual(3, 2)
-print(x + y)  # Output: Dual(real=5, dual=3)
-\end{verbatim}
-
-\subsubsection{Mathematical Functions}
-The \texttt{Dual} class also implements key mathematical functions such as:
-\begin{itemize}
-    \item Trigonometric functions (\texttt{sin}, \texttt{cos}, \texttt{tan}).
-    \item Exponential and logarithmic functions (\texttt{exp}, \texttt{log}).
-    \item Hyperbolic functions (\texttt{sinh}, \texttt{cosh}, \texttt{tanh}).
-    \item Square root (\texttt{sqrt}).
-\end{itemize}
-For example:
-\begin{verbatim}
-x = Dual(2, 1)
-result = x.sin()
-print(result)  # Output: Dual(real=0.9092..., dual=-0.4161...)
-\end{verbatim}
-
-\subsection{Utility Functions}
-To enhance usability:
-\begin{itemize}
-    \item \texttt{functions.py} provides aliases for mathematical functions.
-    \item \texttt{base.py} includes helper functions like:
+    \subsection{Overview of the \texttt{Dual} Class}
+    The \texttt{dual.py} file implements the \texttt{Dual} class, the core of the \texttt{dual\_autodiff} package. This class defines dual numbers and supports operations such as addition, subtraction, multiplication, and division.
+    
+    \subsubsection{Arithmetic Operations}
+    The \texttt{Dual} class overrides arithmetic operators for seamless integration. For example:
+    \begin{verbatim}
+    x = Dual(2, 1)
+    y = Dual(3, 2)
+    print(x + y)  # Output: Dual(real=5, dual=3)
+    \end{verbatim}
+    
+    \subsubsection{Mathematical Functions}
+    The \texttt{Dual} class also implements key mathematical functions such as:
     \begin{itemize}
-        \item \texttt{is\_dual\_instance(value)}: Checks if a value is a \texttt{Dual} instance.
-        \item \texttt{ensure\_dual(value)}: Wraps non-\texttt{Dual} values into a \texttt{Dual} object.
+        \item Trigonometric functions (\texttt{sin}, \texttt{cos}, \texttt{tan}).
+        \item Exponential and logarithmic functions (\texttt{exp}, \texttt{log}).
+        \item Hyperbolic functions (\texttt{sinh}, \texttt{cosh}, \texttt{tanh}).
+        \item Square root (\texttt{sqrt}).
     \end{itemize}
-\end{itemize}
+    For example:
+    \begin{verbatim}
+    x = Dual(2, 1)
+    result = x.sin()
+    print(result)  # Output: Dual(real=0.9092..., dual=-0.4161...)
+    \end{verbatim}
+    
+    \subsubsection{Error Handling and Special Cases}
+    The \texttt{Dual} class ensures that mathematical operations like \texttt{log} and \texttt{sqrt} are only applied within valid domains, raising appropriate errors when encountering invalid inputs.
+    
+    \subsection{Example of Using Dual Numbers}
+    Consider the function:
+    \begin{equation}
+        f(x) = \log(x) + x^2 \implies f'(x) = \frac{1}{x} + 2x.
+        \label{eq:derivative_example}
+    \end{equation}
+    
+    This can be evaluated directly using the \texttt{Dual} class:
+    \begin{verbatim}
+    x = Dual(2, 1)
+    f_x = x.log() + x**2  # Output: Dual(real=4.0, dual=4.5)
+    \end{verbatim}
+    
+    \subsection{Utility Functions}
+    
+    To enhance usability and simplify mathematical operations, two utility modules are provided as part of the package:
+    
+    \begin{itemize}
+        \item \texttt{functions.py}: This module provides global aliases for commonly used mathematical functions, such as \texttt{sin}, \texttt{cos}, \texttt{log}, and \texttt{sqrt}. These aliases act as wrappers around the corresponding methods of the \texttt{Dual} class, allowing users to apply these functions directly to \texttt{Dual} instances or standard numerical values. For example:
+        \begin{verbatim}
+        from dual_autodiff.functions import sin, cos, log
+        x = Dual(2, 1)
+        result = sin(x) + log(x)
+        \end{verbatim}
+        These aliases improve the user experience by making the library's API intuitive and easy to use, especially when working with dual numbers in complex expressions.
+    
+        \item \texttt{base.py}: This module includes helper functions to streamline operations on \texttt{Dual} instances:
+        \begin{itemize}
+            \item \texttt{is\_dual\_instance(value)}: A utility function that checks whether a given value is an instance of the \texttt{Dual} class. This is useful for validation, ensuring that mathematical operations are applied only to compatible types.
+            \item \texttt{ensure\_dual(value)}: A function that wraps a non-\texttt{Dual} value into a \texttt{Dual} object with its derivative initialized to zero. This ensures that all mathematical functions can seamlessly handle both standard numerical values and dual numbers.
+        \end{itemize}
+    \end{itemize}
+    
+    These utility functions simplify the use of the package by enabling both explicit handling of dual numbers and implicit conversions when required, making the library more accessible for a wide range of users.
+    
 
 \section{Project Structure and Packaging}
 
-\subsection{Repository Organization}
+\subsection{Repository Organisation}
 The repository adheres to established best practices for Python projects to ensure clarity, maintainability, and modularity. Below is an overview of its structure:
 
 \subsubsection{Top-Level Directory}
-The top-level directory organizes the project as follows:
+The top-level directory organises the project as follows:
 \begin{itemize}
     \item \textbf{\texttt{dual\_autodiff/}}: Core implementation, including modules like \texttt{dual.py}, \texttt{functions.py}, and \texttt{base.py}.
-    \item \textbf{\texttt{tests/}}: Unit tests for core modules.
-    \item \textbf{\texttt{docs/}}: Documentation files, including Sphinx configurations.
+    \item \textbf{\texttt{dual\_autodiff\_x/}}: Cythonised implementation of the package for enhanced performance, including \texttt{.pyx} source files and compiled \texttt{.so} binaries.
+    \item \textbf{\texttt{tests/}}: Unit tests for core modules. Use the \texttt{pytest} command to run the tests.
+    \item \textbf{\texttt{docs/}}: Documentation files, including Sphinx configurations and example notebook.
     \item \textbf{\texttt{report/}}: LaTeX report and related files.
     \item \textbf{\texttt{dist/}}: Package distribution files (wheel and source archives).
     \item \textbf{\texttt{build/}}: Temporary build files.
@@ -141,7 +179,9 @@ The top-level directory organizes the project as follows:
     \item \textbf{\texttt{requirements.txt}}: Python dependencies.
     \item \textbf{\texttt{environment.yaml}}: Conda environment definition.
     \item \textbf{\texttt{README.md}}: Project overview and instructions.
+    \item \textbf{\texttt{LICENCE}}: Contains the MIT License under which the project is distributed.
 \end{itemize}
+
 
 
 \subsection{Building and Installing the Package}
@@ -160,37 +200,6 @@ To build and install the package, the following steps were performed:
 \end{enumerate}
 
 This approach ensures the package is properly configured, packaged, and ready for distribution or further development.
-
-\section{Implementation of \texttt{dual.py}}
-
-\begin{itemize}
-    \item \textbf{Arithmetic Operations:} Operators (\texttt{+}, \texttt{-}, \texttt{*}, \texttt{/}) for mathematical operations. For example:
-    \begin{verbatim}
-    x = Dual(2, 1); y = Dual(3, 2)
-    z = x + y  # Dual(real=5, dual=3)
-    \end{verbatim}
-    \item \textbf{Mathematical Functions:} Implements \texttt{sin}, \texttt{cos}, \texttt{log}, \texttt{exp}, \texttt{sqrt}, etc., extended to dual numbers. For instance:
-    \begin{verbatim}
-    x = Dual(2, 1)
-    result = x.sin()  # Dual(real=0.9092..., dual=-0.4161...)
-    \end{verbatim}
-    \item \textbf{Power and Root:} Supports scalar powers and square root computations:
-    \begin{verbatim}
-    x = Dual(4, 1)
-    result = x.sqrt()  # Dual(real=2.0, dual=0.25)
-    \end{verbatim}
-    \item \textbf{Error Handling:} Ensures mathematical operations like \texttt{log} and \texttt{sqrt} are only applied within valid domains.
-\end{itemize}
-
-Example:
-\[
-f(x) = \log(x) + x^2 \implies f'(x) = \frac{1}{x} + 2x
-\]
-can be evaluated directly using:
-\begin{verbatim}
-x = Dual(2, 1)
-f_x = x.log() + x**2  
-\end{verbatim}
 
 \section{Publishing to PyPI}
 
@@ -233,13 +242,17 @@ print(x.sin())
 
 \subsection{Function Definition}
 The target function for differentiation is:
-\[
-f(x) = \log(\sin(x)) + x^2 \cos(x)
-\]
+\begin{equation}
+    f(x) = \log(\sin(x)) + x^2 \cos(x),
+    \label{eq:function_definition}
+    \end{equation}
+    
 The derivative of this function, computed analytically, is:
-\[
-f'(x) = -x^2 \sin(x) + \frac{\cos(x)}{\sin(x)} + 2x \cos(x)
-\]
+\begin{equation}
+    f'(x) = -x^2 \sin(x) + \frac{\cos(x)}{\sin(x)} + 2x \cos(x),
+    \label{eq:function_derivative}
+    \end{equation}
+    
 
 \subsection{Using Dual Numbers for Differentiation}
 To compute \(f'(x)\) at \(x = 1.5\) using dual numbers:
@@ -269,9 +282,11 @@ The results obtained using dual numbers closely match the manually computed valu
 
 \begin{itemize}
     \item \textbf{Numerical Differentiation:} The central difference formula was used:
-    \[
-    f'(x) \approx \frac{f(x + h) - f(x - h)}{2h}.
-    \]
+    \begin{equation}
+        f'(x) \approx \frac{f(x + h) - f(x - h)}{2h},
+        \label{eq:central_difference}
+    \end{equation}
+    
     This was evaluated for step sizes decreasing logarithmically from \(h = 10^{-0.5}\) to \(h = 10^{-3}\).
 \end{itemize}
 
@@ -381,7 +396,7 @@ To Cythonize the \texttt{dual\_autodiff} package, a separate directory named \te
 To evaluate the effectiveness of Cythonization, we compared the performance of the pure Python and Cythonized implementations.
 
 \subsubsection{Experimental Setup}
-Execution times were measured for arrays of dual numbers with lengths ranging from 100 to 14,000. Three ranges of real parts were considered: \((0,10)\), \((10,100)\), and \((100,1000)\). Each experiment was repeated 100 times, and linear regression was applied to analyze gradients of execution time with respect to array length.
+Execution times were measured for arrays of dual numbers with lengths ranging from 100 to 14,000. Three ranges of real parts were considered: \((0,10)\), \((10,100)\), and \((100,1000)\). Each experiment was repeated 100 times, and linear regression was applied to analyse gradients of execution time with respect to array length.
 
 \subsubsection{Observations}
 Figure~\ref{fig:performance_comparison} illustrates the performance comparison:
@@ -417,24 +432,25 @@ The gradients in Figure~\ref{fig:performance_comparison} provide a quantitative 
 \end{itemize}
 
 \textbf{Scalability and Impact of Lower Gradients:} \\
-The lower gradient for the Cythonized implementation demonstrates its superior scalability. As the array length grows, the execution time for the Cythonized version increases at a much slower rate compared to the Python implementation. This efficiency arises from the reduced overhead in Cython, where the code is compiled into C, minimizing dynamic type-checking and interpretation, which are inherent to Python. Consequently, the Cythonized version is better equipped to handle larger and more computationally intensive tasks efficiently.
+The lower gradient for the Cythonized implementation demonstrates its superior scalability. As the array length grows, the execution time for the Cythonized version increases at a much slower rate compared to the Python implementation. This efficiency arises from the reduced overhead in Cython, where the code is compiled into C, minimising dynamic type-checking and interpretation, which are inherent to Python. Consequently, the Cythonized version is better equipped to handle larger and more computationally intensive tasks efficiently.
 
 \section{Building Wheels for Linux}
 
-To create specific wheels for the \texttt{dual\_autodiff\_x} package targeting \texttt{cp310-manylinux\_x86\_64} and \texttt{cp311-manylinux\_x86\_64}, the process was carried out manually on the University of Cambridge's CSD3 cluster due to compatibility issues on macOS M4.
+To create specific wheels for the \texttt{dual\_autodiff\_x} package targeting \texttt{cp310-manylinux\_x86\_64} and \texttt{cp311-manylinux\_x86\_64}, initial attempts were carried out manually on the University of Cambridge's CSD3 cluster due to compatibility issues on macOS M4. However, I later utilised a family member's laptop to streamline the process with a single command, directly generating wheels in the required manylinux format.
 
-\subsection{Steps for Building the Wheels}
+\subsection{Steps for Building the Wheels on CSD3}
 \begin{enumerate}
     \item \textbf{Building the Python 3.10 Wheel:}
     \begin{itemize}
         \item Python 3.10 was built from source and installed in \texttt{\$HOME/python310}:
         \begin{verbatim}
-        ./configure --prefix=$HOME/python310 --enable-optimizations
+        ./configure --prefix=$HOME/python310 --enable-optimisations
         make -j$(nproc) && make install
         \end{verbatim}
         \item The wheel was created and saved in the \texttt{wheelhouse} directory:
         \begin{verbatim}
-/home/rsr45/python310/bin/python3.10 setup.py bdist_wheel --dist-dir wheelhouse
+/home/rsr45/python310/bin/python3.10 setup.py bdist_wheel 
+--dist-dir wheelhouse
         \end{verbatim}
     \end{itemize}
 
@@ -442,7 +458,8 @@ To create specific wheels for the \texttt{dual\_autodiff\_x} package targeting \
     \begin{itemize}
         \item Verified Python 3.11 was installed on CSD3 and prepared the environment:
         \begin{verbatim}
-        python3.11 -m pip install --user --upgrade pip setuptools wheel cython
+        python3.11 -m pip install --user --upgrade pip setuptools 
+        wheel cython
         \end{verbatim}
         \item The wheel was created and saved in the \texttt{wheelhouse} directory:
         \begin{verbatim}
@@ -451,11 +468,26 @@ To create specific wheels for the \texttt{dual\_autodiff\_x} package targeting \
     \end{itemize}
 \end{enumerate}
 
-\subsection{Contents of the Wheel}
-The built wheels for Python 3.10 and 3.11 were inspected to ensure they contained the necessary compiled binaries and metadata for distribution. The key contents included:
+\subsection{Final Method and Contents of the Wheel}
+By utilising the family member's laptop, I generated both wheels in the manylinux format with a single command:
+\begin{verbatim}
+cibuildwheel --output-dir wheelhouse .
+\end{verbatim}
+This simplified the process and ensured compatibility with \texttt{manylinux} standards.
+
+The wheels are stored in the \texttt{wheelhouse} directory, and their contents were verified by extracting each into the \texttt{wheel\_contents} directory:
+\begin{itemize}
+    \item \textbf{Compiled Binaries:} Shared object files (\texttt{*.so}) for the core modules (\texttt{base}, \texttt{dual}, \texttt{functions}, and \texttt{version}), ensuring optimal performance.
+    \item \textbf{Metadata:} The \texttt{dist-info} directory contains essential files such as:
+    \begin{itemize}
+        \item \texttt{METADATA}: Package details like name, version, and dependencies.
+        \item \texttt{WHEEL}: Compatibility and wheel-specific metadata.
+        \item \texttt{RECORD}: File integrity and hash information.
+    \end{itemize}
+\end{itemize}
 
 \begin{itemize}
-    \item \textbf{Compiled Binaries:} The \texttt{dual\_autodiff} directory contained shared object files (\texttt{*.so}) for the core modules (\texttt{base}, \texttt{dual}, and \texttt{functions}), ensuring optimized performance without exposing the source code.
+    \item \textbf{Compiled Binaries:} The \texttt{dual\_autodiff} directory contained shared object files (\texttt{*.so}) for the core modules (\texttt{base}, \texttt{dual}, and \texttt{functions}), ensuring optimised performance without exposing the source code.
     \item \textbf{Metadata:} The \texttt{dist-info} directory included essential metadata files such as:
     \begin{itemize}
         \item \texttt{METADATA}: Package details like name, version, and dependencies.
@@ -476,7 +508,7 @@ pip install rsr45-dual-autodiff-x
     \item Efficient dual number arithmetic.
     \item Comprehensive mathematical functions.
     \item Automatic differentiation.
-    \item Performance optimization with Cython for enhanced speed.
+    \item Performance optimisation with Cython for enhanced speed.
 \end{itemize}
 
 This ensures the package is accessible for scientific and computational tasks, promoting usability and reproducibility.
