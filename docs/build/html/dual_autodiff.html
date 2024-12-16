@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tutorial for dual_autodiff &#8212; dual_autodiff 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=686e5160" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css?v=2aa19091" />
+    <script src="_static/documentation_options.js?v=01f34227"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="dual_autodiff Modules" href="modules.html" />
+    <link rel="prev" title="Tutorial" href="tutorial.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="Tutorial-for-dual_autodiff">
+<h1>Tutorial for dual_autodiff<a class="headerlink" href="#Tutorial-for-dual_autodiff" title="Link to this heading">¶</a></h1>
+<p>This tutorial demonstrates how to use the <code class="docutils literal notranslate"><span class="pre">dual_autodiff</span></code> package for forward-mode automatic differentiation using dual numbers. We will explore: - Creating and manipulating dual numbers - Using mathematical operations - Applying automatic differentiation</p>
+<section id="Installing-packages">
+<h2>Installing packages<a class="headerlink" href="#Installing-packages" title="Link to this heading">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">rsr45</span><span class="o">-</span><span class="n">dual</span><span class="o">-</span><span class="n">autodiff</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">rsr45</span><span class="o">-</span><span class="n">dual</span><span class="o">-</span><span class="n">autodiff</span><span class="o">-</span><span class="n">x</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">numpy</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Import-required-libraries-and-modules">
+<h2>Import required libraries and modules<a class="headerlink" href="#Import-required-libraries-and-modules" title="Link to this heading">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[85]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span>
+<span class="kn">from</span> <span class="nn">matplotlib.cm</span> <span class="kn">import</span> <span class="n">tab10</span>
+
+<span class="kn">import</span> <span class="nn">dual_autodiff</span>
+<span class="kn">import</span> <span class="nn">dual_autodiff_x</span>
+
+<span class="kn">from</span> <span class="nn">dual_autodiff.dual</span> <span class="kn">import</span> <span class="n">Dual</span> <span class="k">as</span> <span class="n">PythonDual</span>
+<span class="kn">from</span> <span class="nn">dual_autodiff.functions</span> <span class="kn">import</span> <span class="n">sin</span> <span class="k">as</span> <span class="n">Psin</span>
+<span class="kn">from</span> <span class="nn">dual_autodiff.functions</span> <span class="kn">import</span> <span class="n">cos</span> <span class="k">as</span> <span class="n">Pcos</span>
+<span class="kn">from</span> <span class="nn">dual_autodiff.functions</span> <span class="kn">import</span> <span class="n">log</span> <span class="k">as</span> <span class="n">Plog</span>
+
+<span class="kn">from</span> <span class="nn">dual_autodiff_x.dual</span> <span class="kn">import</span> <span class="n">Dual</span> <span class="k">as</span> <span class="n">CythonDual</span>
+</pre></div>
+</div>
+</div>
+<section id="Creating-a-dual-number">
+<h3>Creating a dual number<a class="headerlink" href="#Creating-a-dual-number" title="Link to this heading">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[86]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a dual number</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">PythonDual</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># Real part = 2, Dual part = 1</span>
+
+<span class="c1"># Display the dual number</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Dual number:&quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Dual number: 2 + 1ε
+</pre></div></div>
+</div>
+</section>
+<section id="Performing-mathematical-operations-on-the-dual-number">
+<h3>Performing mathematical operations on the dual number<a class="headerlink" href="#Performing-mathematical-operations-on-the-dual-number" title="Link to this heading">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[87]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Perform mathematical operations</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;sin(x):&quot;</span><span class="p">,</span> <span class="n">Psin</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;cos(x):&quot;</span><span class="p">,</span> <span class="n">Pcos</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;log(x):&quot;</span><span class="p">,</span> <span class="n">Plog</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+
+<span class="c1"># Combine with another dual number</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">PythonDual</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="n">Plog</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Result of x + y * log(x):&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+sin(x): 0.9092974268256817 - 0.4161468365471424ε
+cos(x): -0.4161468365471424 - 0.9092974268256817ε
+log(x): 0.6931471805599453 + 0.5ε
+Result of x + y * log(x): 4.079441541679836 + 2.8465735902799727ε
+</pre></div></div>
+</div>
+</section>
+<section id="Differentiating-the-function-defined-in-task-5-using-dual-numbers">
+<h3>Differentiating the function defined in task 5 using dual numbers<a class="headerlink" href="#Differentiating-the-function-defined-in-task-5-using-dual-numbers" title="Link to this heading">¶</a></h3>
+<p>In this section we compare the analytical derivative and the derivative using dual numbers.</p>
+<p>We go on to explore how the numerical derivative diverges from the true derivative with increasing step size.</p>
+<div class="math notranslate nohighlight">
+\[f(x) = \text{log}(\text{sin}(x)) + x^2 \cdot \text{cos}(x)\]</div>
+<div class="math notranslate nohighlight">
+\[f'_{\text{analytical}}(x) = \frac{\cos(x)}{\sin(x)} -x^2 \cdot \sin(x) + 2x \cdot \cos(x)\]</div>
+<div class="math notranslate nohighlight">
+\[f'_{\text{numeric}}(x) \approx \frac{f(x + h) - f(x - h)}{2h}\]</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[89]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">f_dual</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">Plog</span><span class="p">(</span><span class="n">Psin</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Pcos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+<span class="c1"># Compute f(x) and its derivative at x = 1.5 using Dual numbers</span>
+<span class="n">x_val_dual</span> <span class="o">=</span> <span class="n">PythonDual</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">result_dual</span> <span class="o">=</span> <span class="n">f_dual</span><span class="p">(</span><span class="n">x_val_dual</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Using Dual Numbers:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;f(1.5) using Dual Numbers: </span><span class="si">{</span><span class="n">result_dual</span><span class="o">.</span><span class="n">real</span><span class="si">:</span><span class="s2">.17g</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;f&#39;(1.5) using Dual Numbers: </span><span class="si">{</span><span class="n">result_dual</span><span class="o">.</span><span class="n">dual</span><span class="si">:</span><span class="s2">.17g</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Function definition using double-precision floats</span>
+<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+<span class="c1"># Compute f&#39;(x) analytically</span>
+<span class="k">def</span> <span class="nf">df</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">m1</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">m2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">m3</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">m1</span> <span class="o">+</span> <span class="n">m2</span> <span class="o">+</span> <span class="n">m3</span>
+
+<span class="c1"># Calculate f(x) and its derivative at x = 1.5 using manual computation</span>
+<span class="n">x_val</span> <span class="o">=</span> <span class="mf">1.5</span>
+<span class="n">f_result</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x_val</span><span class="p">)</span>
+<span class="n">df_result</span> <span class="o">=</span> <span class="n">df</span><span class="p">(</span><span class="n">x_val</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Using Analytical Computation:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;f(1.5) using Analytical Computation: </span><span class="si">{</span><span class="n">f_result</span><span class="si">:</span><span class="s2">.17g</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;f&#39;(1.5) using Analytical Computation: </span><span class="si">{</span><span class="n">df_result</span><span class="si">:</span><span class="s2">.17g</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Using Dual Numbers:
+f(1.5) using Dual Numbers: 0.15665054756073515
+f&#39;(1.5) using Dual Numbers: -1.9612372705533612
+
+Using Analytical Computation:
+f(1.5) using Analytical Computation: 0.15665054756073515
+f&#39;(1.5) using Analytical Computation: -1.9612372705533614
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Numerical derivative using finite differences</span>
+<span class="k">def</span> <span class="nf">numerical_derivative</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">h</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">h</span><span class="p">)</span> <span class="o">-</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">h</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span>
+
+<span class="c1"># Function for numerical computation</span>
+<span class="k">def</span> <span class="nf">f_numeric</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+<span class="c1"># Compute derivatives for decreasing step sizes</span>
+<span class="n">x_val</span> <span class="o">=</span> <span class="mf">1.5</span>
+<span class="n">steps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="n">numerical_results</span> <span class="o">=</span> <span class="p">[</span><span class="n">numerical_derivative</span><span class="p">(</span><span class="n">f_numeric</span><span class="p">,</span> <span class="n">x_val</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">steps</span><span class="p">]</span>
+
+<span class="c1"># True value for comparison</span>
+<span class="n">true_derivative</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">PythonDual</span><span class="p">(</span><span class="n">x_val</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">dual</span>
+
+<span class="c1"># Compute differences</span>
+<span class="n">differences</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">numerical_results</span><span class="p">)</span> <span class="o">-</span> <span class="n">true_derivative</span><span class="p">)</span>
+
+<span class="c1"># Plot results</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">steps</span><span class="p">,</span> <span class="n">numerical_results</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Numerical Derivative&quot;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">true_derivative</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;True Derivative&quot;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Step size (h)&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Derivative&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Convergence of Numerical Derivative&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+
+<span class="c1"># Save the figure in high resolution</span>
+<span class="n">save_path</span> <span class="o">=</span> <span class="s2">&quot;/Users/raunaqrai/Documents/DIS/coursework/c1/dual_autodiff/report/convergence_derivative.png&quot;</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>  <span class="c1"># dpi=300 ensures high resolution</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Plot saved successfully to: </span><span class="si">{</span><span class="n">save_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Plot saved successfully to: /Users/raunaqrai/Documents/DIS/coursework/c1/dual_autodiff/report/convergence_derivative.png
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/dual_autodiff_13_1.png" src="_images/dual_autodiff_13_1.png" />
+</div>
+</div>
+</section>
+</section>
+<section id="The-section-below-is-not-part-of-the-tutorial,-but-compares-the-performance-of-the-pure-Python-version-(dual_autodiff)-and-the-Cythonized-version-(dual_autodiff_x)">
+<h2>The section below is not part of the tutorial, but compares the performance of the pure Python version (dual_autodiff) and the Cythonized version (dual_autodiff_x)<a class="headerlink" href="#The-section-below-is-not-part-of-the-tutorial,-but-compares-the-performance-of-the-pure-Python-version-(dual_autodiff)-and-the-Cythonized-version-(dual_autodiff_x)" title="Link to this heading">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#defining mulitple functions with a range of complexities</span>
+
+<span class="k">def</span> <span class="nf">linear_function</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">2</span>
+
+<span class="k">def</span> <span class="nf">quadratic_function</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">5</span>
+
+<span class="k">def</span> <span class="nf">trig_function</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">sin</span><span class="p">()</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">cos</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">log_function</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">log</span><span class="p">()</span> <span class="o">+</span> <span class="n">x</span> <span class="o">**</span> <span class="mi">2</span>
+
+<span class="k">def</span> <span class="nf">composite_function</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">sin</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">log</span><span class="p">()</span> <span class="o">+</span> <span class="n">x</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x</span><span class="o">.</span><span class="n">cos</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">nested_function</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">exp</span><span class="p">()</span> <span class="o">-</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">sin</span><span class="p">()</span> <span class="o">+</span> <span class="n">x</span> <span class="o">**</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">sqrt</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">iterative_function</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">x</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+<span class="k">def</span> <span class="nf">piecewise_function</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">real</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">x</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">sin</span><span class="p">()</span> <span class="o">+</span> <span class="n">x</span><span class="o">.</span><span class="n">log</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">iterative_exponential_function</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">x</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">exp</span><span class="p">()</span> <span class="o">-</span> <span class="p">(</span><span class="n">x</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">sqrt</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+<span class="k">def</span> <span class="nf">high_degree_polynomial</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span> <span class="o">**</span> <span class="mi">7</span> <span class="o">+</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">x</span> <span class="o">**</span> <span class="mi">6</span> <span class="o">+</span> <span class="mi">15</span> <span class="o">*</span> <span class="n">x</span> <span class="o">**</span> <span class="mi">5</span> <span class="o">+</span> <span class="mi">20</span> <span class="o">*</span> <span class="n">x</span> <span class="o">**</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">15</span> <span class="o">*</span> <span class="n">x</span> <span class="o">**</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">x</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">x</span>
+
+<span class="k">def</span> <span class="nf">nested_square_root_log</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">sqrt</span><span class="p">()</span><span class="o">.</span><span class="n">sqrt</span><span class="p">()</span><span class="o">.</span><span class="n">sqrt</span><span class="p">()</span><span class="o">.</span><span class="n">log</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">recursive_function</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">sqrt</span><span class="p">()</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span><span class="o">.</span><span class="n">cos</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">recursive_function</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sqrt</span><span class="p">()</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span><span class="o">.</span><span class="n">sin</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">composite_conditional_function</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">real</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sin</span><span class="p">()</span> <span class="o">+</span> <span class="n">x</span><span class="o">.</span><span class="n">log</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">exp</span><span class="p">()</span> <span class="o">-</span> <span class="n">x</span> <span class="o">**</span> <span class="mi">3</span>
+
+<span class="k">def</span> <span class="nf">long_iterative_function</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">x</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">sin</span><span class="p">()</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">cos</span><span class="p">()</span><span class="o">.</span><span class="n">exp</span><span class="p">()</span> <span class="o">-</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">i</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">log</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+<span class="n">test_functions</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">linear_function</span><span class="p">,</span>
+    <span class="n">quadratic_function</span><span class="p">,</span>
+    <span class="n">trig_function</span><span class="p">,</span>
+    <span class="n">log_function</span><span class="p">,</span>
+    <span class="n">composite_function</span><span class="p">,</span>
+    <span class="n">nested_function</span><span class="p">,</span>
+    <span class="n">iterative_function</span><span class="p">,</span>
+    <span class="n">piecewise_function</span><span class="p">,</span>
+    <span class="n">iterative_exponential_function</span><span class="p">,</span>
+    <span class="n">high_degree_polynomial</span><span class="p">,</span>
+    <span class="n">nested_square_root_log</span><span class="p">,</span>
+    <span class="n">recursive_function</span><span class="p">,</span>
+    <span class="n">composite_conditional_function</span><span class="p">,</span>
+    <span class="n">long_iterative_function</span>
+<span class="p">]</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># function to measure execution times</span>
+<span class="k">def</span> <span class="nf">measure_execution_time</span><span class="p">(</span><span class="n">dual_class</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">n_iterations</span><span class="o">=</span><span class="mi">10000</span><span class="p">):</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">dual_class</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_iterations</span><span class="p">):</span>
+        <span class="n">func</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#print the differences between Python and Cython implementation</span>
+<span class="k">for</span> <span class="n">func</span> <span class="ow">in</span> <span class="n">test_functions</span><span class="p">:</span>
+    <span class="n">python_time</span> <span class="o">=</span> <span class="n">measure_execution_time</span><span class="p">(</span><span class="n">PythonDual</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">n_iterations</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+    <span class="n">cython_time</span> <span class="o">=</span> <span class="n">measure_execution_time</span><span class="p">(</span><span class="n">CythonDual</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">n_iterations</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: Python=</span><span class="si">{</span><span class="n">python_time</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s, Cython=</span><span class="si">{</span><span class="n">cython_time</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+linear_function: Python=0.0033s, Cython=0.0022s
+quadratic_function: Python=0.0162s, Cython=0.0090s
+trig_function: Python=0.0277s, Cython=0.0203s
+log_function: Python=0.0109s, Cython=0.0082s
+composite_function: Python=0.0293s, Cython=0.0242s
+nested_function: Python=0.0283s, Cython=0.0235s
+iterative_function: Python=0.6959s, Cython=0.4566s
+piecewise_function: Python=0.0146s, Cython=0.0127s
+iterative_exponential_function: Python=2.0479s, Cython=1.5336s
+high_degree_polynomial: Python=0.0438s, Cython=0.0312s
+nested_square_root_log: Python=0.0189s, Cython=0.0151s
+recursive_function: Python=0.0833s, Cython=0.0731s
+composite_conditional_function: Python=0.0114s, Cython=0.0099s
+long_iterative_function: Python=3.5448s, Cython=2.9419s
+</pre></div></div>
+</div>
+<p>There is a clear performance difference between the pure Python and the Cythonized implementations, particularly for more computationally intensive functions.</p>
+<p>For simpler functions like linear_function, quadratic_function, and piecewise_function, the performance difference between Python and Cythonized versions is minimal. These functions involve minimal computations, so the overhead of function calls dominates execution time. Cython’s optimisations are less significant here.</p>
+<p>For highly iterative or nested functions like iterative_function, iterative_exponential_function, and long_iterative_function, the Cythonized version outperforms the Python version. These functions involve extensive loops and nested operations, where Cython’s optimisations, such as converting loops into C-style iterations, reduce overhead.</p>
+<p>Cythonization is most effective when applied to functions with high computational loads or extensive loops, while the benefits for simpler functions are minimal.</p>
+<section id="Application-to-Cosmology">
+<h3>Application to Cosmology<a class="headerlink" href="#Application-to-Cosmology" title="Link to this heading">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define functions</span>
+<span class="k">def</span> <span class="nf">growth_factor</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">omega_m</span><span class="p">,</span> <span class="n">dual_class</span><span class="p">):</span>
+    <span class="n">a_dual</span> <span class="o">=</span> <span class="n">dual_class</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">a_dual</span> <span class="o">**</span> <span class="mi">2</span>  <span class="c1"># Example trial solution</span>
+    <span class="n">dD_da</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">dual</span> <span class="o">/</span> <span class="n">D</span><span class="o">.</span><span class="n">real</span>  <span class="c1"># First derivative</span>
+    <span class="k">return</span> <span class="o">-</span><span class="mi">3</span> <span class="o">*</span> <span class="p">(</span><span class="n">omega_m</span> <span class="o">/</span> <span class="n">a_dual</span> <span class="o">**</span> <span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="n">D</span> <span class="o">+</span> <span class="p">(</span><span class="mi">3</span> <span class="o">/</span> <span class="n">a_dual</span><span class="p">)</span> <span class="o">*</span> <span class="n">dD_da</span>
+
+<span class="k">def</span> <span class="nf">comoving_distance</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">H0</span><span class="p">,</span> <span class="n">omega_m</span><span class="p">,</span> <span class="n">omega_r</span><span class="p">,</span> <span class="n">omega_lambda</span><span class="p">,</span> <span class="n">dual_class</span><span class="p">):</span>
+    <span class="n">z_dual</span> <span class="o">=</span> <span class="n">dual_class</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">H_z</span> <span class="o">=</span> <span class="n">H0</span> <span class="o">*</span> <span class="p">((</span><span class="n">omega_m</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">z_dual</span><span class="p">)</span> <span class="o">**</span> <span class="mi">3</span><span class="p">)</span> <span class="o">+</span>
+                <span class="p">(</span><span class="n">omega_r</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">z_dual</span><span class="p">)</span> <span class="o">**</span> <span class="mi">4</span><span class="p">)</span> <span class="o">+</span>
+                <span class="n">omega_lambda</span><span class="p">)</span><span class="o">.</span><span class="n">sqrt</span><span class="p">()</span>
+    <span class="k">return</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">H_z</span>
+
+<span class="c1"># Timing function</span>
+<span class="k">def</span> <span class="nf">measure_execution_time</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">dual_class</span><span class="p">,</span> <span class="n">n_iterations</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_iterations</span><span class="p">):</span>
+        <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">dual_class</span><span class="o">=</span><span class="n">dual_class</span><span class="p">)</span>
+    <span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span>
+
+<span class="c1"># Constants for testing</span>
+<span class="n">a</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="n">z</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="n">omega_m</span> <span class="o">=</span> <span class="mf">0.3</span>
+<span class="n">omega_r</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">omega_lambda</span> <span class="o">=</span> <span class="mf">0.7</span>
+<span class="n">H0</span> <span class="o">=</span> <span class="mf">70.0</span>
+<span class="n">n_iterations</span> <span class="o">=</span> <span class="mi">10000</span>
+
+<span class="c1"># Measure execution times</span>
+<span class="n">python_time_growth</span> <span class="o">=</span> <span class="n">measure_execution_time</span><span class="p">(</span><span class="n">growth_factor</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">omega_m</span><span class="p">,</span> <span class="n">dual_class</span><span class="o">=</span><span class="n">PythonDual</span><span class="p">,</span> <span class="n">n_iterations</span><span class="o">=</span><span class="n">n_iterations</span><span class="p">)</span>
+<span class="n">cython_time_growth</span> <span class="o">=</span> <span class="n">measure_execution_time</span><span class="p">(</span><span class="n">growth_factor</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">omega_m</span><span class="p">,</span> <span class="n">dual_class</span><span class="o">=</span><span class="n">CythonDual</span><span class="p">,</span> <span class="n">n_iterations</span><span class="o">=</span><span class="n">n_iterations</span><span class="p">)</span>
+
+<span class="n">python_time_comoving</span> <span class="o">=</span> <span class="n">measure_execution_time</span><span class="p">(</span><span class="n">comoving_distance</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">H0</span><span class="p">,</span> <span class="n">omega_m</span><span class="p">,</span> <span class="n">omega_r</span><span class="p">,</span> <span class="n">omega_lambda</span><span class="p">,</span> <span class="n">dual_class</span><span class="o">=</span><span class="n">PythonDual</span><span class="p">,</span> <span class="n">n_iterations</span><span class="o">=</span><span class="n">n_iterations</span><span class="p">)</span>
+<span class="n">cython_time_comoving</span> <span class="o">=</span> <span class="n">measure_execution_time</span><span class="p">(</span><span class="n">comoving_distance</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">H0</span><span class="p">,</span> <span class="n">omega_m</span><span class="p">,</span> <span class="n">omega_r</span><span class="p">,</span> <span class="n">omega_lambda</span><span class="p">,</span> <span class="n">dual_class</span><span class="o">=</span><span class="n">CythonDual</span><span class="p">,</span> <span class="n">n_iterations</span><span class="o">=</span><span class="n">n_iterations</span><span class="p">)</span>
+
+<span class="c1"># Print results</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Growth Factor: Python=</span><span class="si">{</span><span class="n">python_time_growth</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s, Cython=</span><span class="si">{</span><span class="n">cython_time_growth</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Comoving Distance: Python=</span><span class="si">{</span><span class="n">python_time_comoving</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s, Cython=</span><span class="si">{</span><span class="n">cython_time_comoving</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Growth Factor: Python=0.0232s, Cython=0.0115s
+Comoving Distance: Python=0.0256s, Cython=0.0160s
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[90]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define a simple test function</span>
+<span class="k">def</span> <span class="nf">test_function</span><span class="p">(</span><span class="n">dual_array</span><span class="p">):</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">dual_array</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">dual</span> <span class="ow">in</span> <span class="n">dual_array</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+        <span class="n">result</span> <span class="o">+=</span> <span class="n">dual</span><span class="o">.</span><span class="n">sin</span><span class="p">()</span> <span class="o">*</span> <span class="n">dual</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">result</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[91]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">measure_execution_time_varying_dual</span><span class="p">(</span><span class="n">dual_class</span><span class="p">,</span> <span class="n">array_length</span><span class="p">,</span> <span class="n">dual_range</span><span class="p">,</span> <span class="n">n_iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Measures the execution time for a given dual class with varying array lengths and dual number values.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    - dual_class: The Dual class implementation (Python or Cythonized).</span>
+<span class="sd">    - array_length: Length of the array of dual numbers.</span>
+<span class="sd">    - dual_range: Tuple (start, stop) to generate the range of real parts of dual numbers.</span>
+<span class="sd">    - n_iterations: Number of iterations for repeated function evaluation.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    - Execution time in seconds.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">real_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">dual_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dual_range</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">array_length</span><span class="p">)</span>
+    <span class="n">dual_array</span> <span class="o">=</span> <span class="p">[</span><span class="n">dual_class</span><span class="p">(</span><span class="n">real</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">real</span> <span class="ow">in</span> <span class="n">real_values</span><span class="p">]</span>  <span class="c1"># Dual numbers with varying real parts</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_iterations</span><span class="p">):</span>
+        <span class="n">test_function</span><span class="p">(</span><span class="n">dual_array</span><span class="p">)</span>
+    <span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[92]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Function to measure execution time</span>
+<span class="k">def</span> <span class="nf">measure_execution_time_varying_dual</span><span class="p">(</span><span class="n">dual_class</span><span class="p">,</span> <span class="n">array_length</span><span class="p">,</span> <span class="n">dual_range</span><span class="p">,</span> <span class="n">n_iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+    <span class="c1"># Generate dual numbers with varying ranges</span>
+    <span class="n">dual_array</span> <span class="o">=</span> <span class="p">[</span><span class="n">dual_class</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">*</span><span class="n">dual_range</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">array_length</span><span class="p">)]</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_iterations</span><span class="p">):</span>
+        <span class="n">test_function</span><span class="p">(</span><span class="n">dual_array</span><span class="p">)</span>
+    <span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span>
+
+<span class="c1"># Array lengths and ranges for dual numbers</span>
+<span class="n">array_lengths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">15000</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span>  <span class="c1"># Avoid length 0 for meaningful results</span>
+<span class="n">dual_ranges</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)]</span>  <span class="c1"># Varying ranges for the real parts of dual numbers</span>
+
+<span class="c1"># Assign colors to each range</span>
+<span class="n">colors</span> <span class="o">=</span> <span class="n">tab10</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">dual_ranges</span><span class="p">)))</span>
+
+<span class="c1"># Performance measurements</span>
+<span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="k">for</span> <span class="n">dual_range</span> <span class="ow">in</span> <span class="n">dual_ranges</span><span class="p">:</span>
+    <span class="n">python_times</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cython_times</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">length</span> <span class="ow">in</span> <span class="n">array_lengths</span><span class="p">:</span>
+        <span class="c1"># Ensure PythonDual and CythonDual are defined in your environment</span>
+        <span class="n">python_time</span> <span class="o">=</span> <span class="n">measure_execution_time_varying_dual</span><span class="p">(</span><span class="n">PythonDual</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">dual_range</span><span class="p">)</span>
+        <span class="n">cython_time</span> <span class="o">=</span> <span class="n">measure_execution_time_varying_dual</span><span class="p">(</span><span class="n">CythonDual</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">dual_range</span><span class="p">)</span>
+        <span class="n">python_times</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">python_time</span><span class="p">)</span>
+        <span class="n">cython_times</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cython_time</span><span class="p">)</span>
+    <span class="n">results</span><span class="p">[</span><span class="n">dual_range</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">python_times</span><span class="p">,</span> <span class="n">cython_times</span><span class="p">)</span>
+
+<span class="c1"># Gradient calculation and regression</span>
+<span class="n">gradients</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">line_fits</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="k">for</span> <span class="n">dual_range</span><span class="p">,</span> <span class="p">(</span><span class="n">python_times</span><span class="p">,</span> <span class="n">cython_times</span><span class="p">)</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="c1"># Perform linear regression for Python and Cython</span>
+    <span class="n">python_model</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">array_lengths</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">python_times</span><span class="p">)</span>
+    <span class="n">cython_model</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">array_lengths</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">cython_times</span><span class="p">)</span>
+
+    <span class="c1"># Store the slope (average gradient) and predictions</span>
+    <span class="n">gradients</span><span class="p">[</span><span class="n">dual_range</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">python_model</span><span class="o">.</span><span class="n">coef_</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cython_model</span><span class="o">.</span><span class="n">coef_</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">line_fits</span><span class="p">[</span><span class="n">dual_range</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">python_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">array_lengths</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+        <span class="n">cython_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">array_lengths</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="p">)</span>
+
+<span class="c1"># Plotting results</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">dual_range</span><span class="p">,</span> <span class="p">(</span><span class="n">python_times</span><span class="p">,</span> <span class="n">cython_times</span><span class="p">))</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+    <span class="n">python_grad</span><span class="p">,</span> <span class="n">cython_grad</span> <span class="o">=</span> <span class="n">gradients</span><span class="p">[</span><span class="n">dual_range</span><span class="p">]</span>
+    <span class="n">label_range</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Range: </span><span class="si">{</span><span class="n">dual_range</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">python_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Python </span><span class="si">{</span><span class="n">label_range</span><span class="si">}</span><span class="s2"> (Gradient: </span><span class="si">{</span><span class="n">python_grad</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">)&quot;</span>
+    <span class="n">cython_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Cython </span><span class="si">{</span><span class="n">label_range</span><span class="si">}</span><span class="s2"> (Gradient: </span><span class="si">{</span><span class="n">cython_grad</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">)&quot;</span>
+    <span class="n">color</span> <span class="o">=</span> <span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="c1"># Scatter plot for data points</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">array_lengths</span><span class="p">,</span> <span class="n">python_times</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">python_label</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">array_lengths</span><span class="p">,</span> <span class="n">cython_times</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">cython_label</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+
+    <span class="c1"># Line of best fit</span>
+    <span class="n">python_fit</span><span class="p">,</span> <span class="n">cython_fit</span> <span class="o">=</span> <span class="n">line_fits</span><span class="p">[</span><span class="n">dual_range</span><span class="p">]</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">array_lengths</span><span class="p">,</span> <span class="n">python_fit</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">array_lengths</span><span class="p">,</span> <span class="n">cython_fit</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Array Length (Number of Dual Numbers)&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Execution Time (seconds)&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Performance Comparison with Average Gradients and Best Fit Lines&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper left&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># Save the figure in high resolution</span>
+<span class="n">save_path</span> <span class="o">=</span> <span class="s2">&quot;/Users/raunaqrai/Documents/DIS/coursework/c1/dual_autodiff/report/performance_comparison.png&quot;</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Plot saved successfully to: </span><span class="si">{</span><span class="n">save_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<br/><br/></pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Plot saved successfully to: /Users/raunaqrai/Documents/DIS/coursework/c1/dual_autodiff/report/performance_comparison.png
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/dual_autodiff_23_1.png" src="_images/dual_autodiff_23_1.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">dual_autodiff</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="implementation.html">Implementation of Dual Numbers and Operations</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorial.html">Tutorial</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Tutorial for dual_autodiff</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorial for dual_autodiff</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Installing-packages">Installing packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Import-required-libraries-and-modules">Import required libraries and modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#The-section-below-is-not-part-of-the-tutorial,-but-compares-the-performance-of-the-pure-Python-version-(dual_autodiff)-and-the-Cythonized-version-(dual_autodiff_x)">The section below is not part of the tutorial, but compares the performance of the pure Python version (dual_autodiff) and the Cythonized version (dual_autodiff_x)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">dual_autodiff Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#dual-autodiff-dual">dual_autodiff.dual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#dual-autodiff-base">dual_autodiff.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#dual-autodiff-functions">dual_autodiff.functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#dual-autodiff-version">dual_autodiff.version</a></li>
+<li class="toctree-l1"><a class="reference internal" href="apple_silicon_x86_setup.html">Apple Silicon x86_64 Setup</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="tutorial.html">Tutorial</a><ul>
+      <li>Previous: <a href="tutorial.html" title="previous chapter">Tutorial</a></li>
+      <li>Next: <a href="modules.html" title="next chapter">dual_autodiff Modules</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Raunaq Rai.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/dual_autodiff.ipynb.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
