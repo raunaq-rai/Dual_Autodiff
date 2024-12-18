@@ -22,7 +22,7 @@
 \author{Raunaq Rai (rsr45@cam.ac.uk)\\
     Data Intensive Science, Department of Physics, University of Cambridge
 }
-\date{18 December, 2024 \\ \vspace{0.2cm} {\small Word Count: 2902}}
+\date{18 December, 2024 \\ \vspace{0.2cm} {\small Word Count: 2959}}
 
 \begin{document}
 
@@ -365,6 +365,8 @@ To Cythonize the \texttt{dual\_autodiff} package, a separate directory named \te
     pip install -e .
     \end{verbatim}
 \end{enumerate}
+
+The \texttt{.so} and \texttt{.c} files are excluded from the GitLab repository because they are platform-specific and can be regenerated from the \texttt{.pyx} source files using Cython. Including these files would unnecessarily increase the repository size and could lead to compatibility issues, as the compiled files depend on the system architecture and compiler settings of the development environment.
 
 \section{Performance Insights}
 To evaluate the effectiveness of Cythonization, we compared the performance of the pure Python and Cythonized implementations.
