@@ -42,6 +42,9 @@ tests/*.pyc
 .AppleDouble
 .LSOverride
 
+*.so
+*.c
+
 # Miscellaneous
 *.bak
 *.old
