@@ -33,7 +33,7 @@ This report details the development and implementation of a Python package, \tex
 
 The approach builds on the concept of forward-mode automatic differentiation, which is essential in fields like optimisation, computational physics, and machine learning. This technique traces its roots to the foundational work by Wengert~\cite{wengert1964automatic}, who introduced a systematic way to compute derivatives using intermediate variables. More recently, Baydin et al.~\cite{baydin2018automatic} surveyed the use of automatic differentiation in machine learning, emphasising its importance in training deep neural networks.
 
-To enhance performance, a Cython-optimised version, \texttt{dual\_autodiff\_x}, was also developed. This document covers the structure of the project, the mathematical principles behind dual numbers, and the implementation details of the package.
+To enhance performance, a Cython-optimised version, \texttt{dual\_autodiff\_x}, was also developed. This document covers the mathematical principles behind dual numbers, and the implementation details of the package.
 
 The structure of this report follows that of the coursework problem sheet.
 
@@ -47,7 +47,7 @@ Dual numbers can be defined as truncated Taylor series of the form:
 where \(v, \dot{v} \in \mathbb{R}\), and \(\epsilon\) is a nilpotent number such that \(\epsilon^2 = 0\) and \(\epsilon \neq 0\). Here:
 \begin{itemize}
     \item \(v\): Represents the \textit{primal value}.
-    \item \(\dot{v}\): Represents the \textit{derivative} or \textit{tangent value}.
+    \item \(\dot{v}\): Represents the \textit{derivative value}.
 \end{itemize}
 
 As explained by Baydin et al.~\cite{baydin2018automatic}, arithmetic operations with dual numbers align naturally with symbolic differentiation principles:
@@ -333,7 +333,7 @@ The final documentation includes:
     \item \textbf{Tutorial Page:} Practical examples and usage guide.
     \item \textbf{Implementation Page:} Theoretical background and key concepts.
 \end{itemize}
-The integration of \texttt{autodoc} and \texttt{nbsphinx} ensures docstrings from the codebase and the tutorial notebook are seamlessly included, enhancing accessibility for users.
+The integration of \texttt{autodoc} and \texttt{nbsphinx} ensures docstrings from the codebase and the tutorial notebook are included, enhancing accessibility for users.
 
 
 \section{Cythonizing the Package}
@@ -387,13 +387,12 @@ Figure~\ref{fig:performance_comparison} illustrates the performance comparison:
     \label{fig:performance_comparison}
 \end{figure}
 
-\subsection{Analysis of Gradients}
-Figure~\ref{fig:performance_comparison} illustrates how execution time scales with array length. Python implementation gradients are higher (\(2.20 \times 10^{-4}\)), showing faster growth in execution time, unaffected by the range of real parts. In contrast, Cythonized gradients (\(1.63 \times 10^{-4}\)) are lower, showing better scalability and suitability for larger datasets.
+Figure~\ref{fig:performance_comparison} shows how execution time scales with array length. Python implementation gradients are higher (\(2.20 \times 10^{-4}\)), showing faster growth in execution time, unaffected by the range of real parts. In contrast, Cythonized gradients (\(1.63 \times 10^{-4}\)) are lower, showing better scalability and suitability for larger datasets.
 
 \subsection{Conclusion}
-Cythonization improves the scalability and efficiency of the \texttt{dual\_autodiff} package by converting Python code into optimized C extensions. The reduced overhead and compiled nature of Cython minimise dynamic type-checking, leading to lower execution times and better handling of computationally intensive tasks.
+Cythonization improves the scalability and efficiency of the \texttt{dual\_autodiff} package by converting Python code into optimised C extensions. The reduced overhead and compiled nature of Cython minimise dynamic type-checking, leading to lower execution times and better handling of computationally intensive tasks.
 
-Applications like machine learning, requiring differentiation of large parameter arrays, and computational physics, involving derivatives of discretized data points, benefit from this improved performance. Faster computation reduces runtime and resource usage, making the Cythonized version ideal for large-scale problems.
+Applications like machine learning, requiring differentiation of large parameter arrays, and computational physics, involving derivatives of discretised data points, benefit from this improved performance. Faster computation reduces runtime and resource usage, making the Cythonized version ideal for large-scale problems.
 
 These results align with prior studies~\cite{mortensen2016cython}, demonstrating that Cython achieves performance comparable to low-level languages like C++. The findings validate the advantages of Cythonization for real-world, high-performance applications.
 
@@ -402,7 +401,7 @@ These results align with prior studies~\cite{mortensen2016cython}, demonstrating
 
 To create specific wheels for the \texttt{dual\_autodiff\_x} package targeting \texttt{cp310-manylinux\_x86\_64} and \texttt{cp311-manylinux\_x86\_64}, I initially attempted the process manually on the University of Cambridge's CSD3 cluster due to compatibility issues on macOS M4. Later, I used a family member's laptop, which allowed me to generate wheels in the required manylinux format with a single command.
 
-The initial steps on CSD3 taught me valuable lessons about creating environments, understanding computer architecture, and troubleshooting compatibility challenges. Although these steps did not produce manylinux-compatible wheels, the experience deepened my technical understanding and problem-solving skills. Borrowing an older laptop ultimately provided a simpler and more effective solution.
+The initial steps on CSD3 taught me valuable lessons about creating environments, understanding computer architecture, and troubleshooting compatibility challenges. Although these steps produced linux-compatible wheels, not produce manylinux-compatible wheels, the experience deepened my technical understanding and problem-solving skills. Borrowing an older laptop ultimately provided a simpler and more effective solution.
 
 
 By utilising a family member's laptop, I generated both wheels in the \texttt{manylinux} format with a single command:
@@ -478,7 +477,7 @@ This project successfully developed the \texttt{dual\_autodiff} package, impleme
 
 The Python implementation prioritised ease of use, while the Cythonized version (\texttt{dual\_autodiff\_x}) improved performance which was quantitatively evaluated. Best practices, such as unit testing, detailed documentation via Sphinx, and a tutorial notebook, ensured the package's robustness and practical applicability.
 
-This coursework strengthened skills in computational physics, software optimization, and problem-solving. Future work could expand the package to support higher-order derivatives, alternate differentiation modes, and additional architectures, such as ARM-based platforms. Overall, the \texttt{dual\_autodiff} package is a versatile tool with applications in optimization, machine learning, and computational physics.
+This coursework strengthened skills in computational physics, software optimisation, and problem-solving. Future work could expand the package to support higher-order derivatives, alternate differentiation modes, and additional architectures, such as ARM-based platforms. Overall, the \texttt{dual\_autodiff} package is a versatile tool with applications in optimisation, machine learning, and computational physics.
 
 \printbibliography
 
