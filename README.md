@@ -1,3 +1,11 @@
+# C1 Research Computing Coursework
+
+**Author:** Raunaq Rai (rsr45@cam.ac.uk)
+**Course:** MPhil in Data Intensive Science, University of Cambridge
+**Submission Date:** 18th December, 2024
+
+---
+
 # dual_autodiff
 
 `dual_autodiff` is a Python package for automatic differentiation using dual numbers. It simplifies derivative computations for mathematical functions and operations. Additionally, the package includes a Cython-optimized version, `dual_autodiff_x`, for enhanced performance.
