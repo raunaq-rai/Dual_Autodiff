@@ -1,7 +1,9 @@
 # C1 Research Computing Coursework
 
 **Author:** Raunaq Rai (rsr45@cam.ac.uk)
+
 **Course:** MPhil in Data Intensive Science, University of Cambridge
+
 **Submission Date:** 18th December, 2024
 
 ---
