@@ -1,28 +1,33 @@
 # .readthedocs.yaml
-version: 2
 
-# Build documentation in the "docs/" directory
-sphinx:
-  configuration: docs/source/conf.py
+version: 2  # Required version of the configuration file format
 
-# Specify the Python version and additional packages
-python:
-  version: 3.9  # Use the Python version compatible with your project
-  install:
-    - requirements: docs/requirements.txt  # Path to your docs-specific requirements file
-    - method: pip
-      path: .  # Install your project in editable mode
-
-# Build system settings
 build:
-  image: latest  # Use the latest build image
+  os: ubuntu-22.04  # OS for building documentation
+  tools:
+    python: "3.11"  # Python version for the build environment
 
-# Include optional features
+sphinx:
+  configuration: docs/source/conf.py  # Path to Sphinx configuration file
+
+python:
+  install:
+    - method: pip
+      path: .  # Install the project in the Read the Docs environment
+    - requirements: requirements.txt  # Path to project's main requirements file
+
+formats:
+  - pdf  # Generate a PDF version of the documentation
+  - htmlzip  # Generate a zipped HTML version of the documentation
+  - epub  # Generate an EPUB version of the documentation
+
 features:
-  - content_automation: true  # Enables the use of Read the Docs content automation features
+  - skip_random_builds: true  # Skip builds when there are no meaningful changes
 
-# Define environment variables (if any are required for your build)
+build:
+  max_time: 3600  # Increase build time limit for large documentation
+
 environment:
-  # Example: API keys or configurations
-  # MY_API_KEY: "example-key"
+  variables:
+    READTHEDOCS: "True"  
 
