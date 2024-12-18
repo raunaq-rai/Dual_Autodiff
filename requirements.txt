@@ -6,4 +6,5 @@ wheel
 sphinx
 matplotlib
 argparse
+build
 
