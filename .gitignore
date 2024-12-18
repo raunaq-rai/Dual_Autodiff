@@ -46,7 +46,6 @@ tests/*.pyc
 *.bak
 *.old
 *.o
-*.c
 *.h
 
 
