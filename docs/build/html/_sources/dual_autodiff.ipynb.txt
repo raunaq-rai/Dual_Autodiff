@@ -81,7 +81,10 @@
     "from dual_autodiff.functions import cos as Pcos\n",
     "from dual_autodiff.functions import log as Plog\n",
     "\n",
-    "from dual_autodiff_x.dual import Dual as CythonDual"
+    "from dual_autodiff_x.dual import Dual as CythonDual\n",
+    "from dual_autodiff_x.functions import sin as Csin\n",
+    "from dual_autodiff_x.functions import cos as Ccos\n",
+    "from dual_autodiff_x.functions import log as Clog"
    ]
   },
   {
@@ -102,16 +105,19 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "Dual number: 2 + 1ε\n"
+      "Python Dual number: 2 + 1ε\n",
+      "Cython Dual number: 2 + 1ε\n"
      ]
     }
    ],
    "source": [
-    "# Create a dual number\n",
-    "x = PythonDual(2, 1)  # Real part = 2, Dual part = 1\n",
+    "# Create a dual number using the package\n",
+    "x1 = PythonDual(2, 1)  # Real part = 2, Dual part = 1\n",
+    "print(\"Python Dual number:\", x1)\n",
     "\n",
-    "# Display the dual number\n",
-    "print(\"Dual number:\", x)"
+    "# Create a dual number using cythonised package\n",
+    "x2 = CythonDual(2,1)\n",
+    "print(\"Cython Dual number:\", x2)"
    ]
   },
   {
@@ -132,23 +138,189 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
+      "Using Python dual_autodiff:\n",
       "sin(x): 0.9092974268256817 - 0.4161468365471424ε\n",
       "cos(x): -0.4161468365471424 - 0.9092974268256817ε\n",
       "log(x): 0.6931471805599453 + 0.5ε\n",
-      "Result of x + y * log(x): 4.079441541679836 + 2.8465735902799727ε\n"
+      "Result of x + y * log(x): 5 + 1.5ε\n",
+      "\n",
+      "Using Cython dual_autodiff_x:\n",
+      "sin(x): 0.9092974268256817 - 0.4161468365471424ε\n",
+      "cos(x): -0.4161468365471424 - 0.9092974268256817ε\n",
+      "log(x): 0.6931471805599453 + 0.5ε\n",
+      "Result of x + y: 5 + 1.5ε\n"
      ]
     }
    ],
    "source": [
+    "print('Using Python dual_autodiff:')\n",
     "# Perform mathematical operations\n",
-    "print(\"sin(x):\", Psin(x))\n",
-    "print(\"cos(x):\", Pcos(x))\n",
-    "print(\"log(x):\", Plog(x))\n",
+    "print(\"sin(x):\", Psin(x1))\n",
+    "print(\"cos(x):\", Pcos(x1))\n",
+    "print(\"log(x):\", Plog(x1))\n",
     "\n",
     "# Combine with another dual number\n",
-    "y = PythonDual(3, 0.5)\n",
-    "result = x + y * Plog(x)\n",
-    "print(\"Result of x + y * log(x):\", result)\n"
+    "y1 = PythonDual(3, 0.5)\n",
+    "result1 = x1 + y1\n",
+    "print(\"Result of x + y * log(x):\", result1)\n",
+    "\n",
+    "print()\n",
+    "\n",
+    "print('Using Cython dual_autodiff_x:')\n",
+    "# Perform mathematical operations\n",
+    "print(\"sin(x):\", Csin(x2))\n",
+    "print(\"cos(x):\", Ccos(x2))\n",
+    "print(\"log(x):\", Clog(x2))\n",
+    "\n",
+    "# Combine with another dual number\n",
+    "y2 = CythonDual(3, 0.5)\n",
+    "result2 = x2 + y2\n",
+    "\n",
+    "print(\"Result of x + y:\", result2)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "b68db49e",
+   "metadata": {},
+   "source": [
+    "### Growth Factor and Comoving Distance Example"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "4c6994ad",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Growth Factor: Python=0.0196s, Cython=0.0121s\n",
+      "Growth Factor Values: Python=5.1, Cython=5.1\n",
+      "Comoving Distance: Python=0.0154s, Cython=0.0090s\n",
+      "Comoving Distance Values: Python=0.010916581712869572, Cython=0.010916581712869572\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Define functions\n",
+    "def growth_factor(a, omega_m, dual_class):\n",
+    "    a_dual = dual_class(a, 1.0)\n",
+    "    D = a_dual ** 2 \n",
+    "    dD_da = D.dual  # First derivative directly from the dual part\n",
+    "    result = -3 * (omega_m / (a_dual ** 5)) * D + (3 / a_dual) * dD_da\n",
+    "    return result\n",
+    "\n",
+    "def comoving_distance(z, H0, omega_m, omega_r, omega_lambda, dual_class):\n",
+    "    z_dual = dual_class(z, 1.0)\n",
+    "    H_z = H0 * ((omega_m * (1 + z_dual) ** 3) +\n",
+    "                (omega_r * (1 + z_dual) ** 4) +\n",
+    "                omega_lambda).real ** 0.5\n",
+    "    return 1 / H_z\n",
+    "\n",
+    "# Timing function\n",
+    "def measure_execution_time(func, *args, dual_class, n_iterations=1000):\n",
+    "    start_time = time.time()\n",
+    "    for _ in range(n_iterations):\n",
+    "        func(*args, dual_class=dual_class)\n",
+    "    end_time = time.time()\n",
+    "    return end_time - start_time\n",
+    "\n",
+    "# Constants for testing\n",
+    "a = 1.0\n",
+    "z = 0.5\n",
+    "omega_m = 0.3\n",
+    "omega_r = 0.0\n",
+    "omega_lambda = 0.7\n",
+    "H0 = 70.0\n",
+    "n_iterations = 10000\n",
+    "\n",
+    "# Measure execution time for growth_factor\n",
+    "python_time_growth = measure_execution_time(growth_factor, a, omega_m, dual_class=PythonDual, n_iterations=n_iterations)\n",
+    "cython_time_growth = measure_execution_time(growth_factor, a, omega_m, dual_class=CythonDual, n_iterations=n_iterations)\n",
+    "\n",
+    "# Compute values for growth_factor\n",
+    "growth_value_python = growth_factor(a, omega_m, PythonDual)\n",
+    "growth_value_cython = growth_factor(a, omega_m, CythonDual)\n",
+    "\n",
+    "# Measure execution time for comoving_distance\n",
+    "python_time_comoving = measure_execution_time(comoving_distance, z, H0, omega_m, omega_r, omega_lambda, dual_class=PythonDual, n_iterations=n_iterations)\n",
+    "cython_time_comoving = measure_execution_time(comoving_distance, z, H0, omega_m, omega_r, omega_lambda, dual_class=CythonDual, n_iterations=n_iterations)\n",
+    "\n",
+    "# Compute values for comoving_distance\n",
+    "comoving_value_python = comoving_distance(z, H0, omega_m, omega_r, omega_lambda, PythonDual)\n",
+    "comoving_value_cython = comoving_distance(z, H0, omega_m, omega_r, omega_lambda, CythonDual)\n",
+    "\n",
+    "# Print results\n",
+    "print(f\"Growth Factor: Python={python_time_growth:.4f}s, Cython={cython_time_growth:.4f}s\")\n",
+    "print(f\"Growth Factor Values: Python={growth_value_python.real}, Cython={growth_value_cython.real}\")\n",
+    "\n",
+    "print(f\"Comoving Distance: Python={python_time_comoving:.4f}s, Cython={cython_time_comoving:.4f}s\")\n",
+    "print(f\"Comoving Distance Values: Python={comoving_value_python.real}, Cython={comoving_value_cython.real}\")\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "b052678c",
+   "metadata": {},
+   "source": [
+    "### Angular Diameter Distance Example"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "b02b6f89",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Angular Diameter Distance (Python): 1729.73 Mpc, Derivative: 3177.59\n",
+      "Angular Diameter Distance (Cython): 1729.73 Mpc, Derivative: 3177.59\n"
+     ]
+    }
+   ],
+   "source": [
+    "def angular_diameter_distance(z, H0, omega_m, omega_r, omega_lambda, dual_class, n_steps=1000):\n",
+    "    c = 3e5  # Speed of light in km/s\n",
+    "    z_values = np.linspace(0, z, n_steps)  # Discretise the redshift range\n",
+    "    dz = z / (n_steps - 1)  # Step size\n",
+    "    \n",
+    "    D_sum_real = 0\n",
+    "    D_sum_dual = 0\n",
+    "    \n",
+    "    for z_i in z_values:\n",
+    "        z_dual = dual_class(z_i, 1.0)  # Create dual number for each z_i\n",
+    "        H_z = H0 * ((omega_m * (1 + z_dual) ** 3) +\n",
+    "                    (omega_r * (1 + z_dual) ** 4) +\n",
+    "                    omega_lambda).sqrt()\n",
+    "        D_sum_real += (c / H_z.real) * dz  # Trapezium sum for real part\n",
+    "        D_sum_dual += (c / H_z.dual) * dz  # Trapezium sum for derivative part\n",
+    "\n",
+    "    # Angular diameter distance\n",
+    "    D_A_real = D_sum_real / (1 + z)\n",
+    "    D_A_dual = D_sum_dual / (1 + z)\n",
+    "    \n",
+    "    return D_A_real, D_A_dual\n",
+    "\n",
+    "# Constants\n",
+    "z = 2.0\n",
+    "H0 = 70.0\n",
+    "omega_m = 0.3\n",
+    "omega_r = 0.0\n",
+    "omega_lambda = 0.7\n",
+    "\n",
+    "# Compute angular diameter distance using Python and Cython dual classes\n",
+    "D_A_python, D_A_derivative_python = angular_diameter_distance(z, H0, omega_m, omega_r, omega_lambda, PythonDual)\n",
+    "D_A_cython, D_A_derivative_cython = angular_diameter_distance(z, H0, omega_m, omega_r, omega_lambda, CythonDual)\n",
+    "\n",
+    "# Print results\n",
+    "print(f\"Angular Diameter Distance (Python): {D_A_python:.2f} Mpc, Derivative: {D_A_derivative_python:.2f}\")\n",
+    "print(f\"Angular Diameter Distance (Cython): {D_A_cython:.2f} Mpc, Derivative: {D_A_derivative_cython:.2f}\")\n"
    ]
   },
   {
@@ -156,7 +328,7 @@
    "id": "33499ea9",
    "metadata": {},
    "source": [
-    "### Differentiating the function defined in task 5 using dual numbers\n",
+    "# Differentiating the function defined in task 5 using dual numbers\n",
     "\n",
     "In this section we compare the analytical derivative and the derivative using dual numbers.\n",
     "\n",
@@ -173,7 +345,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 5,
+   "execution_count": 4,
    "id": "ff857dfe",
    "metadata": {},
    "outputs": [
@@ -226,7 +398,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 6,
+   "execution_count": null,
    "id": "abca28ab-19b5-4066-ac30-1dad53cc2233",
    "metadata": {},
    "outputs": [
@@ -281,7 +453,7 @@
     "\n",
     "# Save the figure in high resolution\n",
     "save_path = \"/Users/raunaqrai/Documents/DIS/coursework/c1/dual_autodiff/report/convergence_derivative.png\"\n",
-    "plt.savefig(save_path, dpi=300, bbox_inches='tight')  # dpi=300 ensures high resolution\n",
+    "plt.savefig(save_path, dpi=300, bbox_inches='tight') \n",
     "print(f\"Plot saved successfully to: {save_path}\")\n",
     "\n",
     "plt.show()\n"
@@ -292,7 +464,7 @@
    "id": "5e738c89-3577-49f5-b443-a5957a83113f",
    "metadata": {},
    "source": [
-    "## The section below is not part of the tutorial, but compares the performance of the pure Python version (dual_autodiff) and the Cythonized version (dual_autodiff_x)"
+    "# Task 9 - The performance of the pure Python version (dual_autodiff) and the Cythonized version (dual_autodiff_x)"
    ]
   },
   {
@@ -450,73 +622,6 @@
    ]
   },
   {
-   "cell_type": "markdown",
-   "id": "96442e67-baef-4864-8dcb-6d57b58b5388",
-   "metadata": {},
-   "source": [
-    "### Application to Cosmology"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 26,
-   "id": "9f9efdc0-db58-4a1f-9461-71aa4e3bfc42",
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Growth Factor: Python=0.0232s, Cython=0.0115s\n",
-      "Comoving Distance: Python=0.0256s, Cython=0.0160s\n"
-     ]
-    }
-   ],
-   "source": [
-    "# Define functions\n",
-    "def growth_factor(a, omega_m, dual_class):\n",
-    "    a_dual = dual_class(a, 1.0)\n",
-    "    D = a_dual ** 2  # Example trial solution\n",
-    "    dD_da = D.dual / D.real  # First derivative\n",
-    "    return -3 * (omega_m / a_dual ** 5) * D + (3 / a_dual) * dD_da\n",
-    "\n",
-    "def comoving_distance(z, H0, omega_m, omega_r, omega_lambda, dual_class):\n",
-    "    z_dual = dual_class(z, 1.0)\n",
-    "    H_z = H0 * ((omega_m * (1 + z_dual) ** 3) +\n",
-    "                (omega_r * (1 + z_dual) ** 4) +\n",
-    "                omega_lambda).sqrt()\n",
-    "    return 1 / H_z\n",
-    "\n",
-    "# Timing function\n",
-    "def measure_execution_time(func, *args, dual_class, n_iterations=1000):\n",
-    "    start_time = time.time()\n",
-    "    for _ in range(n_iterations):\n",
-    "        func(*args, dual_class=dual_class)\n",
-    "    end_time = time.time()\n",
-    "    return end_time - start_time\n",
-    "\n",
-    "# Constants for testing\n",
-    "a = 1.0\n",
-    "z = 0.5\n",
-    "omega_m = 0.3\n",
-    "omega_r = 0.0\n",
-    "omega_lambda = 0.7\n",
-    "H0 = 70.0\n",
-    "n_iterations = 10000\n",
-    "\n",
-    "# Measure execution times\n",
-    "python_time_growth = measure_execution_time(growth_factor, a, omega_m, dual_class=PythonDual, n_iterations=n_iterations)\n",
-    "cython_time_growth = measure_execution_time(growth_factor, a, omega_m, dual_class=CythonDual, n_iterations=n_iterations)\n",
-    "\n",
-    "python_time_comoving = measure_execution_time(comoving_distance, z, H0, omega_m, omega_r, omega_lambda, dual_class=PythonDual, n_iterations=n_iterations)\n",
-    "cython_time_comoving = measure_execution_time(comoving_distance, z, H0, omega_m, omega_r, omega_lambda, dual_class=CythonDual, n_iterations=n_iterations)\n",
-    "\n",
-    "# Print results\n",
-    "print(f\"Growth Factor: Python={python_time_growth:.4f}s, Cython={cython_time_growth:.4f}s\")\n",
-    "print(f\"Comoving Distance: Python={python_time_comoving:.4f}s, Cython={cython_time_comoving:.4f}s\")\n"
-   ]
-  },
-  {
    "cell_type": "code",
    "execution_count": 90,
    "id": "63c6a38c-16a8-4fc6-94bd-6c52ec006dbb",
@@ -562,7 +667,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 92,
+   "execution_count": null,
    "id": "5747cc51-cef5-4299-a5eb-df1c0c9c838d",
    "metadata": {},
    "outputs": [
@@ -596,7 +701,7 @@
     "    return end_time - start_time\n",
     "\n",
     "# Array lengths and ranges for dual numbers\n",
-    "array_lengths = np.arange(100, 15000, 500)  # Avoid length 0 for meaningful results\n",
+    "array_lengths = np.arange(100, 15000, 500)  \n",
     "dual_ranges = [(0, 10), (10, 100), (100, 1000)]  # Varying ranges for the real parts of dual numbers\n",
     "\n",
     "# Assign colors to each range\n",
@@ -609,7 +714,6 @@
     "    python_times = []\n",
     "    cython_times = []\n",
     "    for length in array_lengths:\n",
-    "        # Ensure PythonDual and CythonDual are defined in your environment\n",
     "        python_time = measure_execution_time_varying_dual(PythonDual, length, dual_range)\n",
     "        cython_time = measure_execution_time_varying_dual(CythonDual, length, dual_range)\n",
     "        python_times.append(python_time)\n",
